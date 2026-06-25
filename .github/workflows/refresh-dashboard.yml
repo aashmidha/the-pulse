@@ -53,10 +53,13 @@ jobs:
         run: |
           mkdir -p data
           for f in history.json manual.json eng_history.json; do
-            if npx -y wrangler@4 kv key get "$f" --namespace-id "$KV_ID" > "data/$f" 2>/dev/null && [ -s "data/$f" ]; then
+            npx -y wrangler@4 kv key get "$f" --namespace-id "$KV_ID" > "data/$f" 2>/dev/null || true
+            # Keep it ONLY if it's valid JSON. A missing key can return empty/junk,
+            # which would crash the Python loader — so validate, else drop it.
+            if [ -s "data/$f" ] && python3 -c "import json,sys; json.load(open('data/$f'))" 2>/dev/null; then
               echo "restored data/$f"
             else
-              rm -f "data/$f"; echo "no KV value for $f yet (ok)"
+              rm -f "data/$f"; echo "no valid KV value for $f yet (ok)"
             fi
           done
 
