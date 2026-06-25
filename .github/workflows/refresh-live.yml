@@ -44,8 +44,14 @@ jobs:
       - name: Fetch current metrics.json from the live site
         run: |
           mkdir -p public
-          curl -fsS "${{ vars.PAGES_URL }}/metrics.json" -o public/metrics.json \
-            || echo '{}' > public/metrics.json
+          curl -fsSL "${{ vars.PAGES_URL }}/metrics.json" -o public/metrics.json || true
+          # Only keep it if it's valid JSON — otherwise a transient bad response
+          # (e.g. an edge-cache miss returning HTML) must NOT be re-published as
+          # metrics.json. Fall back to an empty object instead of clobbering.
+          if ! python3 -c "import json,sys; json.load(open('public/metrics.json'))" 2>/dev/null; then
+            echo "fetched metrics.json was not valid JSON — using empty fallback"
+            echo '{}' > public/metrics.json
+          fi
 
       - name: Refresh live screen
         run: python3 scripts/refresh_live.py
