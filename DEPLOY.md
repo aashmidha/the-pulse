@@ -47,7 +47,16 @@ python3 deploy/setup.py
 
 It creates the Cloudflare Pages project + KV namespace, creates the public
 GitHub repo, pushes the code, loads all secrets, and triggers the first run.
-When it finishes it prints your live URL (`https://the-pulse.pages.dev`).
+When it finishes it prints your live URL.
+
+> **Live deployment (this account):**
+> - Dashboard: https://the-pulse-3er.pages.dev/
+> - Real-Time: https://the-pulse-3er.pages.dev/live.html
+> - Repo: https://github.com/aashmidha/the-pulse  · Actions tab shows every run.
+>
+> Cloudflare gave the project the subdomain `the-pulse-3er` (the plain
+> `the-pulse` was already taken by another account). That real URL is stored in
+> the GitHub Actions variable `PAGES_URL`, which the live job reads.
 
 Optional cleanup once it succeeds:
 ```bash
@@ -69,7 +78,7 @@ rm ~/.pulse_cloudflare_token ~/.pulse_github_token   # tokens are now in GitHub 
   panels go blank, refresh it: DevTools → Network → `master.php` → Request
   Headers → copy the `bartdemo=` value, then update the secret:
   ```bash
-  printf '%s' 'NEW_COOKIE_VALUE' | gh secret set BART_SESSION_COOKIE --repo <you>/the-pulse
+  printf '%s' 'NEW_COOKIE_VALUE' | gh secret set BART_SESSION_COOKIE --repo aashmidha/the-pulse
   ```
 - **Cost:** $0. Public repo = unlimited Actions minutes; Cloudflare Pages + KV
   are free at this volume.
