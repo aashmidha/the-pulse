@@ -1,0 +1,14 @@
+node_modules/
+.wrangler/
+.dev.vars
+.env
+*.log
+
+# Live numbers & rolling state — NEVER commit (repo is public).
+# These live only in Cloudflare Pages (the JSON the screens fetch) and
+# Cloudflare KV (the rolling history). Regenerated every run.
+public/metrics.json
+public/live.json
+data/history.json
+data/manual.json
+data/eng_history.json

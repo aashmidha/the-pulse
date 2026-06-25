@@ -1,0 +1,84 @@
+name: Refresh dashboard (The Pulse)
+
+# Runs the dashboard pipeline on a schedule and publishes the result to
+# Cloudflare Pages. Rolling state (history / last-good sheet values) is
+# pulled from and pushed back to Cloudflare KV so it survives between runs.
+#
+# Why every 15 min: matches the brief. GitHub's scheduler is "best effort"
+# and can run a few minutes late under load — fine for a wall display.
+
+on:
+  schedule:
+    - cron: "*/15 * * * *"
+  workflow_dispatch: {} # lets you trigger a run by hand from the Actions tab
+
+# Never let two dashboard runs overlap (they share KV state).
+concurrency:
+  group: refresh-dashboard
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      KV_ID: ${{ secrets.CLOUDFLARE_KV_ID }}
+      WRANGLER_SEND_METRICS: "false"
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      # The scripts read PA / sheet / BART-reads creds from a .dev.vars file.
+      # We materialise it from GitHub secrets at runtime (it is git-ignored,
+      # and the runner is destroyed when the job ends).
+      - name: Write .dev.vars from secrets
+        run: |
+          cat > .dev.vars <<'EOF'
+          PA_ACCESS_KEY=${{ secrets.PA_ACCESS_KEY }}
+          PA_SECRET_KEY=${{ secrets.PA_SECRET_KEY }}
+          PA_SITE_ID=${{ secrets.PA_SITE_ID }}
+          MANUAL_SHEET_URL=${{ secrets.MANUAL_SHEET_URL }}
+          BART_SESSION_COOKIE=${{ secrets.BART_SESSION_COOKIE }}
+          BART_NAME=${{ secrets.BART_NAME }}
+          EOF
+
+      # Pull rolling state out of KV into data/ (missing keys are fine on the
+      # very first run — the script just starts a fresh history).
+      - name: Restore rolling state from Cloudflare KV
+        run: |
+          mkdir -p data
+          for f in history.json manual.json eng_history.json; do
+            if npx -y wrangler@4 kv key get "$f" --namespace-id "$KV_ID" > "data/$f" 2>/dev/null && [ -s "data/$f" ]; then
+              echo "restored data/$f"
+            else
+              rm -f "data/$f"; echo "no KV value for $f yet (ok)"
+            fi
+          done
+
+      - name: Refresh metrics  (Piano VX + Analytics + BART)
+        env:
+          PIANO_AID: ${{ secrets.PIANO_AID }}
+          PIANO_API_TOKEN: ${{ secrets.PIANO_API_TOKEN }}
+          PIANO_BASE_URL: ${{ secrets.PIANO_BASE_URL }}
+          BART_BASE_URL: ${{ secrets.BART_BASE_URL }}
+          BART_KEY: ${{ secrets.BART_KEY }}
+        run: python3 scripts/refresh_metrics.py
+
+      - name: Save rolling state back to Cloudflare KV
+        run: |
+          for f in history.json manual.json eng_history.json; do
+            if [ -f "data/$f" ]; then
+              npx -y wrangler@4 kv key put "$f" --path "data/$f" --namespace-id "$KV_ID"
+            fi
+          done
+
+      - name: Publish to Cloudflare Pages
+        run: |
+          npx -y wrangler@4 pages deploy public \
+            --project-name "${{ vars.PAGES_PROJECT }}" \
+            --branch main --commit-dirty=true

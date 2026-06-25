@@ -1,0 +1,57 @@
+name: Refresh live screen (Real-Time)
+
+# Runs the fast live pipeline every ~5 min and publishes live.json to Pages.
+# It does NOT recompute the heavy dashboard; it reads the latest metrics.json
+# (for "subscriptions today") straight from the published site.
+
+on:
+  schedule:
+    - cron: "*/5 * * * *"
+  workflow_dispatch: {}
+
+concurrency:
+  group: refresh-live
+  cancel-in-progress: true
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      WRANGLER_SEND_METRICS: "false"
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Write .dev.vars from secrets
+        run: |
+          cat > .dev.vars <<'EOF'
+          PA_ACCESS_KEY=${{ secrets.PA_ACCESS_KEY }}
+          PA_SECRET_KEY=${{ secrets.PA_SECRET_KEY }}
+          PA_SITE_ID=${{ secrets.PA_SITE_ID }}
+          BART_SESSION_COOKIE=${{ secrets.BART_SESSION_COOKIE }}
+          BART_NAME=${{ secrets.BART_NAME }}
+          EOF
+
+      # live.py reads newSubsToday out of metrics.json. Pull the current one
+      # from the live site so the deploy snapshot keeps it (and live shows the
+      # real headcount). If it's not there yet, live.py falls back gracefully.
+      - name: Fetch current metrics.json from the live site
+        run: |
+          mkdir -p public
+          curl -fsS "${{ vars.PAGES_URL }}/metrics.json" -o public/metrics.json \
+            || echo '{}' > public/metrics.json
+
+      - name: Refresh live screen
+        run: python3 scripts/refresh_live.py
+
+      - name: Publish to Cloudflare Pages
+        run: |
+          npx -y wrangler@4 pages deploy public \
+            --project-name "${{ vars.PAGES_PROJECT }}" \
+            --branch main --commit-dirty=true

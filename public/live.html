@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Business Post — Real-Time</title>
+<style>
+  :root{
+    --bg:#070b11; --panel:#0f1620; --panel2:#141d29; --line:#222d3b;
+    --text:#fff; --muted:#8b97a5;
+    --green:#2fd07a; --red:#ff5c5c; --blue:#5ab0ff; --gold:#ffcf4a; --violet:#bc8cff; --pink:#ff7ab8; --bp:#00b365;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;
+    background:radial-gradient(1200px 700px at 72% -10%, #0d2a1d 0%, var(--bg) 60%);
+    color:var(--text);overflow:hidden;-webkit-font-smoothing:antialiased}
+  .num{font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+  .wrap{height:100vh;display:flex;flex-direction:column;padding:1.8vh 1.8vw;gap:1.3vh}
+
+  header{display:flex;align-items:center;justify-content:space-between;flex:0 0 auto}
+  .brand{display:flex;align-items:center;gap:1vw}
+  .logo{background:var(--bp);color:#fff;font-weight:800;line-height:.9;padding:.7vh .9vw;border-radius:6px;font-size:1.4vw}
+  .logo small{display:block;font-size:.9vw}
+  .htitle{font-size:1.5vw;font-weight:800}
+  .livebadge{display:inline-flex;align-items:center;gap:.5vw;background:rgba(47,208,122,.14);color:var(--green);
+    font-weight:800;font-size:1vw;padding:.5vh 1vw;border-radius:999px;letter-spacing:.1em}
+  .livebadge .d{width:.8vw;height:.8vw;max-width:11px;max-height:11px;border-radius:50%;background:var(--green);animation:blink 1.3s infinite}
+  @keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+  .updated{color:var(--muted);font-size:1vw;font-weight:700}
+
+  .grid{flex:1 1 auto;display:grid;grid-template-columns:3.2fr 4.6fr 3fr;grid-template-rows:1.05fr 1.4fr;gap:1.1vw;min-height:0}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:1.6vh 1.2vw;position:relative;overflow:hidden;min-height:0;display:flex;flex-direction:column}
+  .card .lbl{color:var(--muted);font-size:.85vw;text-transform:uppercase;letter-spacing:.12em;font-weight:700;display:flex;justify-content:space-between;align-items:center}
+  .tag{font-size:.72vw;color:var(--green);font-weight:700}
+
+  .hero{grid-row:1;align-items:center;justify-content:center;text-align:center;
+    background:radial-gradient(420px 320px at 50% 35%, rgba(47,208,122,.14), var(--panel) 70%);border-color:#1d4a33}
+  .hero .big{font-size:5vw;font-weight:800;line-height:1;color:var(--green);text-shadow:0 0 26px rgba(47,208,122,.45);margin:.4vh 0}
+  .hero .cap{color:var(--muted);font-size:.95vw}
+  .hero .cap b{color:var(--text)}
+  .heart{width:100%;height:7vh;margin-top:.8vh}
+  .heart polyline{fill:none;stroke:var(--green);stroke-width:2;vector-effect:non-scaling-stroke}
+  .heart polygon{fill:rgba(47,208,122,.10)}
+
+  .intraday{grid-row:1}
+  .lc{flex:1;min-height:0;width:100%}
+  .lc .today{fill:none;stroke:var(--blue);stroke-width:2.5;vector-effect:non-scaling-stroke;stroke-linejoin:round}
+  .lc .yest{fill:none;stroke:var(--muted);stroke-width:1.6;stroke-dasharray:7 5;vector-effect:non-scaling-stroke;opacity:.7}
+  .lc .fill{fill:rgba(90,176,255,.10)}
+  .lc .nowdot{fill:var(--blue)}
+  .lc .nowring{fill:none;stroke:var(--blue);stroke-width:2;opacity:.7;animation:pdot 1.7s ease-out infinite}
+  @keyframes pdot{0%{r:3;opacity:.8}100%{r:13;opacity:0}}
+  .legend{display:flex;gap:1.2vw;color:var(--muted);font-size:.78vw;margin-top:.3vh}
+  .legend i{display:inline-block;width:1.2vw;height:0;border-top:2px solid var(--blue);margin-right:.3vw;vertical-align:middle}
+  .legend i.y{border-top:2px dashed var(--muted)}
+
+  .race-card{grid-row:2;grid-column:1 / span 2}
+  .race{position:relative;flex:1;min-height:0;margin-top:1vh}
+  .rrow{position:absolute;left:0;right:0;display:flex;align-items:center;gap:1vw;transition:transform .9s cubic-bezier(.22,1,.36,1)}
+  .rrow .rk{font-size:1.4vw;font-weight:800;color:var(--muted);width:2vw;text-align:center;flex:0 0 auto}
+  .rrow .body{flex:1;min-width:0}
+  .rrow .hl{font-size:1.05vw;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:.5vh}
+  .rrow .track{height:1.3vh;background:var(--panel2);border-radius:999px;overflow:hidden}
+  .rrow .fill{height:100%;border-radius:999px;width:0;transition:width .9s cubic-bezier(.22,1,.36,1);background:linear-gradient(90deg,#1e8a52,var(--green))}
+  .rrow .rd{font-size:1.4vw;font-weight:800;color:var(--green);width:5vw;text-align:right;flex:0 0 auto}
+  .rrow .rd small{font-size:.62vw;color:var(--muted);font-weight:500;display:block;margin-top:-.3vh}
+  .rrow.up .rd{animation:bump .9s}
+  @keyframes bump{0%{transform:scale(1)}30%{transform:scale(1.22);color:var(--gold)}100%{transform:scale(1)}}
+
+  .rightcol{grid-row:1 / span 2;grid-column:3;display:flex;flex-direction:column;gap:1.1vh;min-height:0}
+  .mini{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:1.3vh 1.1vw;flex:1;min-height:0;display:flex;flex-direction:column;overflow:hidden}
+  .bars{display:flex;flex-direction:column;gap:.8vh;margin-top:.8vh;flex:1;justify-content:center}
+  .bar{display:flex;align-items:center;gap:.7vw;font-size:.85vw}
+  .bar .name{width:6vw;flex:0 0 auto;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .bar .track{flex:1;height:1vh;background:var(--panel2);border-radius:999px;overflow:hidden}
+  .bar .fill{height:100%;width:0;border-radius:999px;transition:width 1.1s cubic-bezier(.22,1,.36,1)}
+  .bar .val{width:3.4vw;text-align:right;font-weight:700;flex:0 0 auto}
+  .totals{display:flex;gap:1.2vw;flex:1;align-items:center;justify-content:space-around}
+  .tot{text-align:center}
+  .tnum{font-size:2.8vw;font-weight:800;color:var(--green);line-height:1}
+  .tot:nth-child(2) .tnum{color:var(--blue)}
+  .tlbl{color:var(--muted);font-size:.8vw;margin-top:.4vh;text-transform:uppercase;letter-spacing:.06em}
+  .clist{display:flex;flex-direction:column;flex:1;justify-content:center;gap:.5vh;margin-top:.6vh}
+  .crow{display:flex;align-items:center;gap:.7vw;font-size:.92vw}
+  .crow .rk{color:var(--green);font-weight:800;width:1.2vw;flex:0 0 auto}
+  .crow .hl{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:600}
+  .crow .ct{font-weight:800;color:var(--green);flex:0 0 auto}
+  .reserved{align-items:center;justify-content:center}
+  .ph{color:#5d6b7a;font-size:.95vw;font-style:italic}
+  .donut-wrap{display:flex;align-items:center;gap:1.2vw;flex:1}
+  .donut{width:8.5vh;height:8.5vh;flex:0 0 auto;transform:rotate(-90deg)}
+  .donut circle{fill:none;stroke-width:3.4;transition:stroke-dasharray 1.3s cubic-bezier(.22,1,.36,1)}
+  .dleg{display:flex;flex-direction:column;gap:.6vh;font-size:.82vw}
+  .dleg div{display:flex;align-items:center;gap:.5vw;color:var(--muted)}
+  .dleg b{color:var(--text)}
+  .dot{width:.8vw;height:.8vw;border-radius:3px;flex:0 0 auto}
+
+  footer{flex:0 0 auto;height:3.4vh;display:flex;align-items:center;justify-content:center;gap:.6vw;
+    color:var(--muted);font-size:.85vw;border-top:1px solid var(--line);padding-top:.6vh}
+  footer b{color:var(--green)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="brand">
+      <div class="logo">Business<small>Post</small></div>
+      <div class="htitle">Real-Time Newsroom</div>
+      <span class="livebadge"><span class="d"></span>LIVE</span>
+    </div>
+    <div class="updated"><span id="clock" class="num">--:--:--</span> · <span id="updated">updated —</span></div>
+  </header>
+
+  <div class="grid">
+    <section class="card hero">
+      <div class="lbl" style="justify-content:center">Visits Today</div>
+      <div class="big num" id="visitsToday">0</div>
+      <div class="cap">page views <b id="pv">—</b> · last hour <b id="lastHour">—</b></div>
+      <svg class="heart" id="heart" viewBox="0 0 100 30" preserveAspectRatio="none"></svg>
+    </section>
+
+    <section class="card intraday">
+      <div class="lbl"><span>Visits Today vs Yesterday</span><span class="tag">● by hour</span></div>
+      <svg class="lc" id="lc" viewBox="0 0 1000 240" preserveAspectRatio="none"></svg>
+      <div class="legend"><span><i></i>Today</span><span><i class="y"></i>Yesterday</span><span id="nowLbl" style="margin-left:auto;color:var(--blue);font-weight:700"></span></div>
+    </section>
+
+    <section class="card race-card">
+      <div class="lbl"><span>Top Stories Today · by Visits</span><span class="tag">● today · live</span></div>
+      <div class="race" id="race"></div>
+    </section>
+
+    <div class="rightcol">
+      <div class="mini">
+        <div class="lbl"><span>Today's Conversions</span><span class="tag">live</span></div>
+        <div class="totals">
+          <div class="tot"><div class="tnum num" id="subsToday">—</div><div class="tlbl">subscriptions</div></div>
+          <div class="tot"><div class="tnum num" id="regsToday">—</div><div class="tlbl">registrations</div></div>
+        </div>
+      </div>
+      <div class="mini"><div class="lbl"><span>Subscriber Reads</span><span class="tag">24h</span></div><div class="bars" id="convSubs"></div></div>
+      <div class="mini reserved"><div class="lbl"><span>Reserved</span></div><div class="ph">panel to be decided</div></div>
+    </div>
+  </div>
+
+  <footer>● <b>Live</b> from Piano Analytics · auto-refreshes every 60s · all figures real (today)</footer>
+</div>
+
+<script>
+const fmt = n => Math.round(n).toLocaleString("en-IE");
+const cvar = v => getComputedStyle(document.documentElement).getPropertyValue(v) || v;
+
+/* Fallback snapshot so file:// still shows real data; localhost polls live.json. */
+const SNAP = {
+  visitsToday:9989, pageViewsToday:10379, lastHour:2140,
+  hourlyToday:[935,685,484,511,569,1033,1472,2222,1603,2210,2140,0,0,0,0,0,0,0,0,0,0,0,0,0],
+  hourlyYesterday:[792,709,507,447,462,866,1573,2014,2374,2234,2212,2101,1986,2356,2871,2244,2161,2830,1841,2084,1620,1180,980,840],
+  topStories:[
+    {title:"Supreme Range Rover rules the roost", visits:1415},
+    {title:"Race to replace Micheál Martin as Fianna Fáil leader has quietly begun", visits:512},
+    {title:"The high-tech Mercedes S-Class shows how it’s done", visits:280},
+    {title:"What the probate overhaul means for you", visits:252},
+    {title:"Matt Cooper: Ireland needs more data centres, not fewer", visits:243},
+    {title:"Feed lands tasty deal with Dunnes Stores", visits:238},
+    {title:"Amundi’s stake in Bank of Ireland nears €500m", visits:237},
+    {title:"Greg Kavanagh firms’ €2m tax debt proposals don’t ‘hold water’", visits:183}
+  ],
+  subsToday:259, regsToday:34,
+  subReads24h:[
+    {title:"Average Irish homeowner now a millionaire, new report shows", count:373},
+    {title:"CRH confirms $8.5 billion acquisition of rival Arcosa", count:338},
+    {title:"Latest: Streeting backs Burnham to be next PM", count:270},
+    {title:"Harris urged to cut inheritance tax in Budget 2027", count:241},
+    {title:"Fire Steakhouse co-owner buys former McKillen venue", count:198}
+  ],
+  updatedISO:null
+};
+const SRC_COLORS=["--green","--blue","--violet","--gold","--pink","--muted"];
+const DEV_COLORS=["#2fd07a","#5ab0ff","#ffcf4a"];
+
+function tween(el, to, dur=900){
+  const from = Number(el._v||0); if(from===to){ el.textContent=fmt(to); return; }
+  const t0=performance.now();
+  (function s(t){ const p=Math.min(1,(t-t0)/dur), e=1-Math.pow(1-p,3);
+    el.textContent=fmt(from+(to-from)*e); if(p<1) requestAnimationFrame(s); else el._v=to; })(t0);
+  el._v=to;
+}
+
+function drawHeart(today){
+  const v=today.filter(x=>x>0); if(v.length<2){document.getElementById("heart").innerHTML="";return;}
+  const W=100,H=30,min=Math.min(...v),max=Math.max(...v),rng=(max-min)||1;
+  const pts=v.map((x,i)=>`${(i*W/(v.length-1)).toFixed(1)},${(H-2-(x-min)/rng*(H-4)).toFixed(1)}`).join(" ");
+  document.getElementById("heart").innerHTML=`<polygon points="0,${H} ${pts} ${W},${H}"></polygon><polyline points="${pts}"></polyline>`;
+}
+
+function drawIntraday(today, yest){
+  const svg=document.getElementById("lc"), W=1000,H=240,pad=12,top=16,bot=216;
+  const all=today.concat(yest), max=Math.max(...all,1), min=0, rng=max-min;
+  const x=i=>pad+i*(W-2*pad)/23, y=v=>bot-(v-min)/rng*(bot-top);
+  const yPts=yest.map((v,i)=>`${x(i).toFixed(1)},${y(v).toFixed(1)}`).join(" ");
+  const lastH=Math.max(0,today.map((v,i)=>v>0?i:-1).reduce((a,b)=>Math.max(a,b),0));
+  const tArr=today.slice(0,lastH+1);
+  const tPts=tArr.map((v,i)=>`${x(i).toFixed(1)},${y(v).toFixed(1)}`);
+  const nowX=x(lastH), nowY=y(today[lastH]);
+  svg.innerHTML=
+    `<polygon class="fill" points="${x(0).toFixed(1)},${bot} ${tPts.join(" ")} ${nowX.toFixed(1)},${bot}"></polygon>`+
+    `<polyline class="yest" points="${yPts}"></polyline>`+
+    `<polyline class="today" points="${tPts.join(" ")}" stroke-dasharray="2200" stroke-dashoffset="2200"></polyline>`+
+    `<circle class="nowring" cx="${nowX.toFixed(1)}" cy="${nowY.toFixed(1)}" r="3"></circle>`+
+    `<circle class="nowdot" cx="${nowX.toFixed(1)}" cy="${nowY.toFixed(1)}" r="4"></circle>`;
+  const line=svg.querySelector(".today");
+  requestAnimationFrame(()=>{ line.style.transition="stroke-dashoffset 1.5s ease"; line.style.strokeDashoffset="0"; });
+  document.getElementById("nowLbl").textContent=`${String(lastH).padStart(2,"0")}:00 · ${fmt(today[lastH])}/hr`;
+}
+
+let rows=[], raceTitles=[];
+function renderRace(stories){
+  const race=document.getElementById("race");
+  const titles=stories.map(s=>s.title);
+  if(titles.join("|")!==raceTitles.join("|")){      // (re)build rows when the set changes
+    race.innerHTML=""; rows=[]; raceTitles=titles;
+    stories.forEach(s=>{ const el=document.createElement("div"); el.className="rrow";
+      el.innerHTML=`<div class="rk num"></div><div class="body"><div class="hl">${s.title}</div>
+        <div class="track"><div class="fill"></div></div></div><div class="rd num"></div>`;
+      race.appendChild(el); rows.push(el); });
+  }
+  const order=[...stories].sort((a,b)=>b.visits-a.visits), max=order[0].visits||1, h=race.clientHeight/stories.length;
+  order.forEach((s,rank)=>{
+    const idx=stories.indexOf(s), el=rows[idx], prev=el._rank;
+    el.style.height=(h-8)+"px"; el.style.transform=`translateY(${rank*h}px)`;
+    el.querySelector(".rk").textContent=rank+1;
+    el.querySelector(".fill").style.width=(s.visits/max*100)+"%";
+    el.querySelector(".rd").innerHTML=`${fmt(s.visits)}<small>visits</small>`;
+    if(prev!==undefined && rank<prev){ el.classList.add("up"); setTimeout(()=>el.classList.remove("up"),900); }
+    el._rank=rank;
+  });
+}
+
+function renderBars(elId, data, colorFn){
+  const el=document.getElementById(elId), max=Math.max(...data.map(d=>d[1]),1);
+  el.innerHTML=data.map((d,i)=>`<div class="bar"><div class="name">${d[0]}</div>
+    <div class="track"><div class="fill" data-w="${(d[1]/max*100).toFixed(1)}" style="background:${colorFn(d,i)}"></div></div>
+    <div class="val num">${d[1]>=1000?(d[1]/1000).toFixed(0)+'k':d[1]}</div></div>`).join("");
+  requestAnimationFrame(()=>el.querySelectorAll(".fill").forEach(f=>f.style.width=f.dataset.w+"%"));
+}
+
+function renderConvSubs(items){
+  document.getElementById("convSubs").innerHTML =
+    `<div class="clist">` + (items||[]).slice(0,5).map((a,i)=>
+      `<div class="crow"><span class="rk">${i+1}</span><span class="hl">${a.title}</span><span class="ct num">${a.count}</span></div>`
+    ).join("") + `</div>`;
+}
+
+function render(d){
+  tween(document.getElementById("visitsToday"), d.visitsToday);
+  document.getElementById("pv").textContent=fmt(d.pageViewsToday);
+  document.getElementById("lastHour").textContent=fmt(d.lastHour);
+  drawHeart(d.hourlyToday);
+  drawIntraday(d.hourlyToday, d.hourlyYesterday);
+  renderRace(d.topStories);
+  tween(document.getElementById("subsToday"), d.subsToday || 0);
+  tween(document.getElementById("regsToday"), d.regsToday || 0);
+  renderConvSubs(d.subReads24h);
+  const u=d.updatedISO?new Date(d.updatedISO):new Date();
+  document.getElementById("updated").textContent="updated "+u.toLocaleTimeString("en-IE",{hour:"2-digit",minute:"2-digit"});
+}
+
+async function poll(){
+  try{ const r=await fetch("live.json",{cache:"no-store"}); if(!r.ok) throw 0; render(await r.json()); }
+  catch(e){ render(SNAP); }   // file:// or no server → real snapshot
+}
+poll(); setInterval(poll, 60000);
+window.addEventListener("resize",()=>poll());
+function clock(){ document.getElementById("clock").textContent=new Date().toLocaleTimeString("en-IE",{hour12:false}); }
+clock(); setInterval(clock,1000);
+</script>
+</body>
+</html>

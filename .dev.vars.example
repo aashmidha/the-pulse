@@ -1,0 +1,12 @@
+# Copy this file to ".dev.vars" and fill in real values.
+# .dev.vars is git-ignored and is read by scripts + the Cloudflare Worker.
+# NEVER paste these into chat, commits, or screenshots.
+
+# Piano Analytics (for the conversion panels)
+PA_ACCESS_KEY=
+PA_SECRET_KEY=
+PA_SITE_ID=
+
+# Piano VX Publisher (already working from enricher_settings.json — override here if you prefer)
+# PIANO_AID=
+# PIANO_API_TOKEN=

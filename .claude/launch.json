@@ -1,0 +1,6 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    { "name": "dash", "runtimeExecutable": "bash", "runtimeArgs": ["-c", "python3 -m http.server ${PORT:-8787} --directory public"], "port": 8787, "autoPort": true }
+  ]
+}

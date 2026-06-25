@@ -1,0 +1,25 @@
+name = "newsroom-dashboard"
+main = "worker/index.js"
+compatibility_date = "2026-06-01"
+
+# Serve the static dashboard (public/) and the Worker API together.
+[assets]
+directory = "./public"
+binding = "ASSETS"
+
+# KV: subscriber counts, manual weekly figures, Friday snapshot, caches.
+# Create with:  npx wrangler kv namespace create DASH_KV
+[[kv_namespaces]]
+binding = "DASH_KV"
+id = "REPLACE_WITH_KV_ID"
+
+# Cron: run the heavy Piano aggregation off the request path (every 15 min).
+[triggers]
+crons = ["*/15 * * * *"]
+
+# Secrets (set via `wrangler secret put NAME`, never commit them):
+#   PIANO_API_TOKEN   PIANO_AID
+#   PA_ACCESS_KEY     PA_SECRET_KEY     PA_SITE_ID
+#
+# The two manual weekly numbers live in KV, set COB Friday e.g.:
+#   npx wrangler kv key put --binding=DASH_KV manual '{"corporate":2258,"telesalesDirect":46}'

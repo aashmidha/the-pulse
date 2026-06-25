@@ -1,0 +1,3 @@
+# Keeps the data/ directory in the repo. The actual state files
+# (history.json, manual.json, eng_history.json) are git-ignored and
+# live in Cloudflare KV between runs.

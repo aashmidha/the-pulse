@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Business Post — The Pulse</title>
+<style>
+  :root{
+    --bg:#f4f6f9; --tile:#ffffff; --line:#e6eaf0;
+    --text:#1b2433; --muted:#94a0b1;
+    --green:#15b257; --green-bg:rgba(21,178,87,.12);
+    --red:#e5484d;   --red-bg:rgba(229,72,77,.12);
+    --blue:#2f7fed;  --blue-bg:rgba(47,127,237,.12);
+    --gold:#b07d00;  --violet:#7c5cff;  --bp:#00a05a;
+    --shadow:0 1px 3px rgba(25,35,60,.06),0 1px 2px rgba(25,35,60,.04);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;
+    background:var(--bg);color:var(--text);overflow:hidden;-webkit-font-smoothing:antialiased}
+  .wrap{height:100vh;display:flex;flex-direction:column;padding:2.2vh 2vw;gap:1.8vh}
+  .num{font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+
+  /* Header */
+  header{display:flex;align-items:center;justify-content:space-between;flex:0 0 auto}
+  .brand{display:flex;align-items:center;gap:1vw}
+  .logo{background:var(--bp);color:#fff;font-weight:800;line-height:.92;
+    padding:.7vh .95vw;border-radius:6px;font-size:1.4vw;letter-spacing:-.02em}
+  .logo small{display:block;font-size:.95vw;font-weight:700}
+  .htext h1{font-size:1.5vw;font-weight:800;color:var(--green)}
+  .htext p{color:var(--muted);font-size:.95vw;margin-top:.2vh}
+  .clock{text-align:right}
+  .clock .time{font-size:1.5vw;font-weight:800}
+  .clock .live{display:inline-flex;align-items:center;gap:.5vw;color:var(--muted);font-size:.9vw;margin-top:.3vh}
+  .dot{width:.8vw;height:.8vw;max-width:11px;max-height:11px;border-radius:50%;background:var(--green);
+    box-shadow:0 0 0 0 rgba(47,208,122,.6);animation:pulse 2s infinite}
+  @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(47,208,122,.5)}70%{box-shadow:0 0 0 .9vw rgba(47,208,122,0)}100%{box-shadow:0 0 0 0 rgba(47,208,122,0)}}
+
+  /* Hero row: two numbers side by side */
+  .heroes{flex:0 0 auto;display:grid;grid-template-columns:1.4fr 1.15fr 1fr;gap:1.3vw}
+  .hcard{border:1px solid var(--line);border-radius:16px;padding:2.2vh 1.6vw;box-shadow:var(--shadow);
+    display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;position:relative}
+  .hcard.subs{background:linear-gradient(160deg,rgba(21,178,87,.07) 0%,var(--tile) 60%);border-color:#d6ecdd}
+  .hcard.eng{background:linear-gradient(160deg,rgba(176,125,0,.10) 0%,var(--tile) 60%);border-color:#ece1c4}
+  .hcard.regs{background:linear-gradient(160deg,rgba(47,127,237,.07) 0%,var(--tile) 60%);border-color:#d6e3f7}
+  .hcard .lbl{color:var(--muted);font-size:.9vw;text-transform:uppercase;letter-spacing:.1em;font-weight:700}
+  .hcard.eng .lbl{color:var(--gold)}   /* light gold accent on the label only */
+  .hcard .big{font-size:3.4vw;font-weight:800;line-height:1;margin:.4vh 0 .8vh}
+  .hcard.primary .big{font-size:4.6vw}          /* Subscribers stays the hero of heroes */
+  .hcard.eng .big{font-size:4vw}   /* white, like the other heroes */
+  .hcard .expl{color:var(--muted);font-size:.92vw;font-weight:600;margin:.3vh 0 .2vh}
+
+  /* Visits chart band */
+  .chart{flex:0 0 auto;background:var(--tile);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);
+    padding:1.6vh 1.6vw 1vh;display:flex;flex-direction:column;height:20vh;position:relative;overflow:hidden}
+  .chart::before{content:"";position:absolute;left:0;top:0;bottom:0;width:.4vw;background:var(--blue)}
+  .chart-head{display:flex;align-items:center;gap:1.4vw;margin-bottom:.6vh}
+  .chart-head .ttl{font-size:1.05vw;font-weight:800;letter-spacing:-.01em;color:var(--blue)}
+  .chart-stats{flex:1;color:var(--muted);font-size:.9vw}
+  .chart-stats b{color:var(--text);font-weight:700;margin:0 .9vw 0 .3vw}
+  .chart-head .tag{font-size:.62vw;color:var(--blue)}
+  .chart-body{flex:1;min-height:0}
+  #spark{width:100%;height:100%;display:block}
+  #spark polyline{fill:none;stroke:var(--blue);stroke-width:2.5;vector-effect:non-scaling-stroke;stroke-linejoin:round;stroke-linecap:round}
+  #spark polyline.cmp{stroke:var(--muted);stroke-width:1.6;stroke-dasharray:7 5;opacity:.8}
+  #spark polygon{fill:rgba(90,176,255,.10)}
+  #spark circle{fill:var(--blue)}
+  .legend{display:flex;align-items:center;gap:.4vw;color:var(--muted);font-size:.78vw;white-space:nowrap}
+  .legend i{display:inline-block;width:1.3vw;height:0;border-top:2px solid var(--blue);margin-right:.2vw}
+  .legend i.cmp{border-top:2px dashed var(--muted)}
+  .chart-x{display:flex;justify-content:space-between;padding:.4vh .8vw 0;color:var(--muted);font-size:.78vw;font-variant-numeric:tabular-nums}
+  .hcard .chg{display:inline-flex;align-items:center;gap:.5vw;font-size:1.3vw;font-weight:800;
+    padding:.5vh 1.1vw;border-radius:999px}
+  .chg.up{color:var(--green);background:var(--green-bg)} .chg.down{color:var(--red);background:var(--red-bg)}
+  .hcard .moves{display:flex;gap:.9vw;align-items:center;margin-top:.4vh}
+  .mv{display:inline-flex;align-items:center;gap:.4vw;font-size:1.5vw;font-weight:800;padding:.5vh 1.1vw;border-radius:999px}
+  .mv.up{color:var(--green);background:var(--green-bg)} .mv.down{color:var(--red);background:var(--red-bg)}
+  .chg .small{font-size:.85vw;font-weight:600;opacity:.85}
+  .hcard .mix{margin-top:1.6vh;display:flex;gap:1.8vw;color:var(--muted);font-size:.9vw}
+  .hcard .mix b{color:var(--text);font-weight:700;margin-left:.35vw}
+
+  /* Bottom: four lists */
+  .lists{flex:1 1 auto;display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:1.1vw;min-height:0}
+  .lcard{background:var(--tile);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);
+    padding:1.8vh 1.1vw;display:flex;flex-direction:column;min-height:0;position:relative;overflow:hidden}
+  .lcard::before{content:"";position:absolute;left:0;top:0;bottom:0;width:.4vw}
+  .lcard.g::before{background:var(--green)} .lcard.b::before{background:var(--blue)}
+  .lcard.a::before{background:var(--gold)} .lcard.v::before{background:var(--violet)}
+  .lhead{display:flex;justify-content:space-between;align-items:flex-start;gap:.6vw;margin-bottom:1.2vh}
+  .lhead .htxt{display:flex;flex-direction:column;gap:.45vh;min-width:0}
+  .lhead .ttl{font-size:1.05vw;font-weight:800;letter-spacing:-.01em;line-height:1.12}
+  .lhead .sub{font-size:.6vw;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);line-height:1.2}
+  /* rounded outline "pill" (shared with the chart header) */
+  .lhead .tag,.chart-head .tag{display:inline-flex;align-items:center;gap:.4vw;font-weight:800;text-transform:uppercase;letter-spacing:.09em;padding:.5vh .7vw;border:1px solid currentColor;border-radius:999px;white-space:nowrap;flex:0 0 auto;line-height:1}
+  .lhead .tag{font-size:.58vw}
+  /* per-card accent colours the title AND the pill */
+  .g .ttl,.g .tag{color:var(--green)} .b .ttl,.b .tag{color:var(--blue)}
+  .a .ttl,.a .tag{color:var(--gold)} .v .ttl,.v .tag{color:var(--violet)}
+  .tag.demo{color:var(--muted)}  /* placed last so it wins over the accent when showing demo data */
+  .rows{display:flex;flex-direction:column;flex:1;justify-content:space-evenly}
+  .row{display:flex;align-items:flex-start;gap:.7vw;padding:.6vh 0;border-bottom:1px solid var(--line)}
+  .row:last-child{border-bottom:none}
+  .row .rk{font-size:1.05vw;font-weight:800;width:1.3vw;text-align:center;flex:0 0 auto;line-height:1.3}
+  .row .hl{flex:1;font-size:.9vw;font-weight:600;line-height:1.3;white-space:normal}  /* full headline */
+  .row .ct{font-size:1.05vw;font-weight:800;flex:0 0 auto;text-align:right;line-height:1.15}
+  .row .ct small{display:block;font-size:.62vw;color:var(--muted);font-weight:500;margin-top:.1vh}
+  .g .rk,.g .ct{color:var(--green)} .b .rk,.b .ct{color:var(--blue)}
+  .a .rk,.a .ct{color:var(--gold)} .v .rk,.v .ct{color:var(--violet)}
+  .pending{color:var(--muted);font-size:.85vw;align-self:center;text-align:center;padding:2vh 0;line-height:1.5}
+  /* Highlight the #1 in each list as a filled pill (like the screenshot) */
+  .lcard .row:first-child .ct{color:#fff;padding:.3vh .7vw;border-radius:8px}
+  .lcard .row:first-child .ct small{color:rgba(255,255,255,.85)}
+  .g .row:first-child .ct{background:var(--green)} .b .row:first-child .ct{background:var(--blue)}
+  .a .row:first-child .ct{background:var(--gold)} .v .row:first-child .ct{background:var(--violet)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="brand">
+      <div class="logo">Business<small>Post</small></div>
+      <div class="htext"><h1>The Pulse</h1><p id="weekLabel">Week 23 · Jun 1 – Jun 7</p></div>
+    </div>
+    <div class="clock">
+      <div class="time num" id="clock">--:--</div>
+      <div class="live"><span class="dot"></span><span id="liveText">LIVE · updated —</span></div>
+    </div>
+  </header>
+
+  <!-- Heroes: Subscribers (primary) | Engagement (north star) | Registered Users -->
+  <section class="heroes">
+    <div class="hcard subs primary">
+      <div class="lbl">Total Paid Subscribers</div>
+      <div class="big num" id="totalPaid">—</div>
+      <div class="chg up" id="totalChg"></div>
+      <div class="mix" id="mix"></div>
+    </div>
+    <div class="hcard eng">
+      <div class="lbl" id="engLbl">★ Subscriber Engagement</div>
+      <div class="big num" id="engPct">—</div>
+      <div class="chg up" id="engChg"></div>
+      <div class="mix" id="engMix"></div>
+    </div>
+    <div class="hcard regs">
+      <div class="lbl" id="regLbl">New Registered Users · 7d</div>
+      <div class="big num" id="regUsers">—</div>
+      <div class="chg up" id="regChg"></div>
+      <div class="mix" id="regMix"></div>
+    </div>
+  </section>
+
+  <!-- Visits per day — full-width chart band -->
+  <section class="chart">
+    <div class="chart-head">
+      <span class="ttl">Visits · per day</span>
+      <span class="chart-stats" id="visMix"></span>
+      <span class="legend"><i></i>last 7d <i class="cmp"></i>previous 7d</span>
+      <span class="tag" id="visTag" style="display:none"></span>
+    </div>
+    <div class="chart-body">
+      <svg id="spark" viewBox="0 0 1000 200" preserveAspectRatio="none"></svg>
+    </div>
+    <div class="chart-x" id="chartX"></div>
+  </section>
+
+  <!-- Four lists -->
+  <section class="lists">
+    <div class="lcard g">
+      <div class="lhead"><div class="htxt"><span class="ttl">Top Subscriber Conversions</span><span class="sub">Past 7 days · Piano</span></div><span class="tag" id="subTag" style="display:none"></span></div>
+      <div class="rows" id="convSubs"></div>
+    </div>
+    <div class="lcard b">
+      <div class="lhead"><div class="htxt"><span class="ttl">Top Registration Conversions</span><span class="sub">Past 7 days · Piano</span></div><span class="tag" id="regTag" style="display:none"></span></div>
+      <div class="rows" id="convRegs"></div>
+    </div>
+    <div class="lcard a">
+      <div class="lhead"><div class="htxt"><span class="ttl">Most Read — 7 Days</span><span class="sub">By subscribers · BART</span></div><span class="tag" id="reads7Tag" style="display:none"></span></div>
+      <div class="rows" id="topReads7d"></div>
+    </div>
+    <div class="lcard v">
+      <div class="lhead"><div class="htxt"><span class="ttl">Most Read — 24 Hours</span><span class="sub">Rolling 24 hours · BART</span></div><span class="tag" id="reads24Tag" style="display:none"></span></div>
+      <div class="rows" id="topReads24h"></div>
+    </div>
+  </section>
+</div>
+
+<script>
+const MOCK = {
+  weekLabel: "Week 23 · Jun 1 – Jun 7",
+  subscribers: {
+    piano:{value:10644}, b2cd:{value:46}, totalB2C:{value:10690},
+    totalB2B:{value:2258}, totalPaid:{value:12948, deltaWeek:77}
+  },
+  movement: { newSubs7d:233, cancellations7d:155 },
+  engagement: { pctAbove:38.7, threshold:19, deltaWeek:1.6, deltaSince:"2026-06-03", above:4954, subs:12800,
+    b2c:{pctAbove:40}, b2b:{pctAbove:22} },
+  registeredUsers: { last7:1342, prev7:1187, engaged:12077 },
+  conversions: {
+    status: "live",
+    subscribers: [
+      { headline: "Inside the boardroom battle at Ireland's biggest builder", count: 38 },
+      { headline: "Exclusive: State eyes stake in semiconductor plant", count: 31 },
+      { headline: "The quiet rise of Ireland's family offices", count: 24 },
+      { headline: "Budget 2027: what the leaked papers reveal", count: 19 },
+      { headline: "Tech layoffs hit Dublin's docklands cluster", count: 14 }
+    ],
+    registrations: [
+      { headline: "ECB signals June rate cut as inflation cools", count: 162 },
+      { headline: "Budget 2027: what the leaked papers reveal", count: 134 },
+      { headline: "Tech layoffs hit Dublin's docklands cluster", count: 98 },
+      { headline: "The quiet rise of Ireland's family offices", count: 76 },
+      { headline: "Housing targets slip again as completions fall", count: 61 }
+    ]
+  },
+  topReads7d: [
+    { headline: "Equity investors in Elkstone Cork property to be wiped out", reads: 1635 },
+    { headline: "‘Are you fucking deaf’: O’Callaghan family row spills into boardroom spat", reads: 1132 },
+    { headline: "Exclusive: Guinness owner plans for radical ‘operational overhaul’", reads: 886 },
+    { headline: "Exclusive: Diageo Ireland names its new managing director amid company reshuffle", reads: 831 }
+  ],
+  topReads24h: [
+    { headline: "Limerick-based Kneat Solutions agrees €404m sale to US software investor", reads: 706 },
+    { headline: "Greg Kavanagh firms’ €2m tax debt proposals don’t ‘hold water’, Revenue tells court", reads: 304 },
+    { headline: "‘Are you fucking deaf’: O’Callaghan family row spills into boardroom spat", reads: 299 },
+    { headline: "Think your energy bill is bad? Smurfit Westrock’s is a $2 billion problem", reads: 233 }
+  ],
+  visitsDaily: [
+    { date:"2026-06-02", visits:68713 }, { date:"2026-06-03", visits:61518 },
+    { date:"2026-06-04", visits:38509 }, { date:"2026-06-05", visits:31730 },
+    { date:"2026-06-06", visits:47120 }, { date:"2026-06-07", visits:78188 },
+    { date:"2026-06-08", visits:64200 }
+  ],
+  visitsDailyPrev: [
+    { date:"2026-05-26", visits:48120 }, { date:"2026-05-27", visits:44900 },
+    { date:"2026-05-28", visits:41030 }, { date:"2026-05-29", visits:52680 },
+    { date:"2026-05-30", visits:58210 }, { date:"2026-05-31", visits:124300 },
+    { date:"2026-06-01", visits:96400 }
+  ],
+  updatedISO: null
+};
+
+// Pull live metrics.json (written by scripts/refresh_metrics.py / the Worker).
+// Real data overlays the mock; panels not yet wired keep mock + a "demo" tag.
+async function fetchMetrics(){
+  try{
+    const r = await fetch("metrics.json", {cache:"no-store"});
+    if(!r.ok) throw new Error(r.status);
+    return mergeReal(await r.json());
+  }catch(e){
+    // No server (opened via file://) → mock with gentle jitter so it still moves.
+    const d = JSON.parse(JSON.stringify(MOCK));
+    const j = Math.floor(Math.sin(Date.now()/60000) * 6);
+    d.subscribers.piano.value += j; d.subscribers.totalB2C.value += j; d.subscribers.totalPaid.value += j;
+    d.updatedISO = new Date().toISOString();
+    d._live = {subscribers:false, registrations:false, conversions:false, visits:false, reads:false, engagement:false};
+    return d;
+  }
+}
+
+function mergeReal(real){
+  const d = JSON.parse(JSON.stringify(MOCK));
+  const live = real.live || {};
+  d.weekLabel = real.weekLabel || d.weekLabel;
+  if(live.subscribers && real.subscribers) d.subscribers = real.subscribers;          // REAL
+  if(real.movement) d.movement = real.movement;
+  // Engagement: use real if available, else clear to {} so the screen shows "NA"
+  // (never fall back to the mock % once we've reached the live server).
+  d.engagement = (live.engagement && real.engagement?.pctAbove != null) ? real.engagement : {};
+  if(live.registrations && real.registeredUsers?.last7 != null) d.registeredUsers = real.registeredUsers;
+  if(live.conversions && real.conversions) d.conversions = real.conversions;
+  if(live.visits && real.visitsDaily?.length){ d.visitsDaily = real.visitsDaily; d.visitsDailyPrev = real.visitsDailyPrev || []; }
+  if(live.reads){ d.topReads7d = real.topReads7d || []; d.topReads24h = real.topReads24h || []; }
+  d.updatedISO = real.updatedISO || new Date().toISOString();
+  d._live = live;
+  return d;
+}
+
+const fmt = n => n.toLocaleString("en-IE");
+const sign = n => (n>0?"+":"") + n.toLocaleString("en-IE");
+const DEMO = ' <span style="color:#6b7787;font-weight:600">· demo</span>';
+function tagState(id, base, isLive){ const el=document.getElementById(id); if(el) el.innerHTML = base + (isLive?"":DEMO); }
+// Status pill: HIDDEN when the panel is live (the header already shows global
+// live status, so no need to repeat "LIVE" on every card). It only appears to
+// FLAG a problem — a muted "DEMO" when showing fallback/mock data. (Conversions'
+// "awaiting goal" warning is set separately in fillList.)
+function pill(id, isLive){ const el=document.getElementById(id); if(!el) return;
+  if(isLive){ el.style.display="none"; return; }
+  el.style.display=""; el.style.color=""; el.classList.add("demo"); el.textContent="● DEMO"; }
+
+function drawVisits(daily, prev){
+  const vals = daily.map(d => d.visits);
+  const pvals = (prev || []).map(d => d.visits);
+  const stats = document.getElementById("visMix");
+  const svg = document.getElementById("spark");
+  const xax = document.getElementById("chartX");
+  if(!vals.length){ stats.textContent=""; svg.innerHTML=""; xax.innerHTML=""; return; }
+
+  const total = vals.reduce((a,b)=>a+b,0), peak = Math.max(...vals), avg = Math.round(total/vals.length);
+  let wow = "";
+  if(pvals.length){ const pt=pvals.reduce((a,b)=>a+b,0); if(pt){ const v=Math.round((total-pt)/pt*100);
+    wow = ` <span style="color:${v>=0?'var(--green)':'var(--red)'}">(${v>=0?'+':''}${v}% vs prev)</span>`; } }
+  stats.innerHTML = `Total<b>${fmt(total)}</b> Peak<b>${fmt(peak)}</b> Avg/day<b>${fmt(avg)}</b>${wow}`;
+  xax.innerHTML = daily.map(d => {
+    const dt = new Date(d.date + "T00:00:00");
+    return `<span>${dt.toLocaleDateString("en-IE",{weekday:"short",day:"numeric"})}</span>`;
+  }).join("");
+
+  if(vals.length < 2){ svg.innerHTML=""; return; }
+  const W=1000, padX=14, top=20, bot=186;
+  const all = vals.concat(pvals);
+  const min = Math.min(...all), max = Math.max(...all), rng = (max-min)||1;
+  const y = v => bot - (v-min)/rng*(bot-top);
+  const xN = n => i => padX + i*(W-2*padX)/(n-1);
+  const xc = xN(vals.length);
+  const cur = vals.map((v,i)=>`${xc(i).toFixed(1)},${y(v).toFixed(1)}`).join(" ");
+  const area = `${padX},${bot} ${cur} ${(W-padX)},${bot}`;
+  let cmp = "";
+  if(pvals.length >= 2){
+    const xp = xN(pvals.length);
+    const pp = pvals.map((v,i)=>`${xp(i).toFixed(1)},${y(v).toFixed(1)}`).join(" ");
+    cmp = `<polyline class="cmp" points="${pp}"></polyline>`;
+  }
+  svg.innerHTML = `<polygon points="${area}"></polygon>${cmp}<polyline points="${cur}"></polyline>`;
+}
+
+function fillList(elId, items, unit, status, tagId){
+  const el = document.getElementById(elId);
+  if(status === "pending"){
+    if(tagId){ const t=document.getElementById(tagId); t.style.display=""; t.classList.remove("demo"); t.style.color="var(--red)"; t.textContent="⚠ AWAITING GOAL"; }
+    el.innerHTML = `<div class="pending">Conversion goal not yet configured in Piano Composer.</div>`;
+    return;
+  }
+  el.innerHTML = items.slice(0,3).map((a,i) =>
+    `<div class="row"><div class="rk num">${i+1}</div><div class="hl">${a.headline}</div>
+     <div class="ct num">${fmt(a.count ?? a.reads)}<small>${unit}</small></div></div>`).join("");
+}
+
+function render(d){
+  document.getElementById("weekLabel").textContent = d.weekLabel;
+
+  const s = d.subscribers;
+  document.getElementById("totalPaid").textContent = fmt(s.totalPaid.value);
+  const mv = d.movement || {}, tc = document.getElementById("totalChg");
+  const ns = mv.newSubs7d, cx = mv.cancellations7d;
+  tc.className = "moves";
+  tc.innerHTML = `<span class="mv up">▲ ${ns!=null?fmt(ns):"—"}</span>`
+               + `<span class="mv down">▼ ${cx!=null?fmt(cx):"—"}</span>`;
+  document.getElementById("mix").innerHTML =
+    `<span>B2C<b>${fmt(s.piano.value)}</b></span>
+     <span>B2Cd<b>${fmt(s.b2cd.value)}</b></span>
+     <span>B2B<b>${fmt(s.totalB2B.value)}</b></span>`;
+
+  // Engagement (north star): % of subscribers with RFV > threshold
+  const e = d.engagement || {}, ec = document.getElementById("engChg");
+  document.getElementById("engPct").textContent = (e.pctAbove != null ? e.pctAbove.toFixed(1) + "%" : "NA");
+  ec.className = "expl";
+  const srcNote = (e.source && e.source.indexOf("file:")===0)
+    ? ` <span style="color:var(--gold)">· RFV file ${e.source.slice(5)}</span>` : "";
+  ec.innerHTML = (e.above != null && e.subs != null)
+    ? `${fmt(e.above)} of ${fmt(e.subs)} subscribers have RFV &gt; ${e.threshold}${srcNote}`
+    : `<span style="color:var(--gold)">NA</span>`;
+  document.getElementById("engMix").innerHTML = (e.b2c && e.b2b)
+    ? `<span>B2C+B2Cd<b>${e.b2c.pctAbove}%</b></span><span>B2B<b>${e.b2b.pctAbove}%</b></span>` : "";
+
+  const ru = d.registeredUsers, rd = ru.last7-ru.prev7, rUp = rd>=0, rc = document.getElementById("regChg");
+  document.getElementById("regUsers").textContent = fmt(ru.last7);
+  rc.className = "chg " + (rUp?"up":"down");
+  rc.innerHTML = `${rUp?"▲":"▼"} ${sign(rd)} <span class="small">vs prev 7d</span>`;
+  document.getElementById("regMix").innerHTML =
+    `<span>Daily avg<b>${fmt(Math.round(ru.last7/7))}</b></span>`
+    + (ru.engaged != null ? `<span>Engaged registered<b>${fmt(ru.engaged)}</b></span>` : "");
+
+  drawVisits(d.visitsDaily || [], d.visitsDailyPrev || []);
+
+  fillList("convSubs", d.conversions.subscribers, "subs", d.conversions.status, "subTag");
+  fillList("convRegs", d.conversions.registrations, "regs", d.conversions.status, "regTag");
+  fillList("topReads7d", d.topReads7d, "reads", "live", null);
+  fillList("topReads24h", d.topReads24h, "reads", "live", null);
+
+  // Tag panels that aren't wired to live data yet.
+  const live = d._live || {};
+  tagState("regLbl", "New Registered Users · 7d", live.registrations);
+  if(d.conversions.status !== "pending"){
+    pill("subTag", live.conversions);
+    pill("regTag", live.conversions);
+  }
+  pill("reads7Tag", live.reads);
+  pill("reads24Tag", live.reads);
+  pill("visTag", live.visits);
+  // No "demo" badge when engagement is simply NA (only badge it when showing mock data).
+  tagState("engLbl", "★ Subscriber Engagement", live.engagement || e.pctAbove == null);
+
+  const upd = new Date(d.updatedISO);
+  document.getElementById("liveText").textContent =
+    (live.subscribers ? "LIVE · updated " : "demo · ") +
+    upd.toLocaleTimeString("en-IE",{hour:"2-digit",minute:"2-digit"});
+}
+
+async function refresh(){
+  try { render(await fetchMetrics()); }
+  catch(e){ document.getElementById("liveText").textContent = '⚠ data stale — last good values'; }
+}
+function tick(){ document.getElementById("clock").textContent =
+  new Date().toLocaleTimeString("en-IE",{hour:"2-digit",minute:"2-digit"}); }
+
+tick(); setInterval(tick, 1000);
+refresh();
+setInterval(refresh, 120000);   // production: every 2 min
+setInterval(refresh, 5000);     // DEMO ONLY — delete when live
+</script>
+</body>
+</html>
