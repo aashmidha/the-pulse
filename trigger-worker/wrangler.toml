@@ -12,6 +12,8 @@
 name = "the-pulse-trigger"
 main = "index.js"
 compatibility_date = "2025-01-01"
+# Cron-only worker — no public URL needed (avoids requiring a workers.dev subdomain).
+workers_dev = false
 
 [triggers]
 # live every 5 min, dashboard every 15 min — the handler routes by which fired.
