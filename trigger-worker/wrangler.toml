@@ -1,0 +1,18 @@
+# Tiny Cloudflare Worker whose ONLY job is to reliably trigger the GitHub
+# Actions jobs on time — because GitHub's own scheduler drops high-frequency
+# crons. Cloudflare's cron is dependable. The Python still runs in GitHub
+# Actions; this just pokes it.
+#
+# Deploy:  CLOUDFLARE_API_TOKEN=... CLOUDFLARE_ACCOUNT_ID=... \
+#          npx wrangler@4 deploy --config trigger-worker/wrangler.toml
+# Secrets (set after first deploy):
+#   GH_TOKEN     — GitHub fine-grained PAT, repo "the-pulse", Actions: Read+Write
+#   TRIGGER_KEY  — random string; gates the manual /trigger test endpoint
+
+name = "the-pulse-trigger"
+main = "index.js"
+compatibility_date = "2025-01-01"
+
+[triggers]
+# live every 5 min, dashboard every 15 min — the handler routes by which fired.
+crons = ["*/5 * * * *", "*/15 * * * *"]
