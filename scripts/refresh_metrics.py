@@ -97,8 +97,13 @@ def aggregate_subscribers():
             except (TypeError, ValueError): sd = 0
             try: ed = int(s.get("end_date", 0) or 0)
             except (TypeError, ValueError): ed = 0
-            if WIN_START <= sd < WIN_END: new_subs_7d += 1        # new paid sub in 7d window
-            if sd >= WIN_END: new_subs_today += 1                 # started today (>= midnight)
+            # Exclude "upgrade …" terms: these are EXISTING subscribers migrated onto a
+            # new rate-card term by the monthly price-upgrade automation (Piano writes a
+            # fresh subscription record dated today), NOT genuine new subscribers. Winbacks
+            # and first-time subs are kept.
+            if "upgrade" not in term_name(s):
+                if WIN_START <= sd < WIN_END: new_subs_7d += 1    # new paid sub in 7d window
+                if sd >= WIN_END: new_subs_today += 1             # started today (>= midnight)
             if WIN_START <= ed < WIN_END:                         # subscription ENDED in 7d window
                 cancelled_uids.add((s.get("user") or {}).get("uid") or s.get("subscription_id"))
             # current subscriber: active/won't-renew AND paid term hasn't ended yet
