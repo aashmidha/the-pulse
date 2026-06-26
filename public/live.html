@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Business Post — Real-Time</title>
+<title>Business Post — Today Live</title>
 <style>
   :root{
     --bg:#070b11; --panel:#0f1620; --panel2:#141d29; --line:#222d3b;
@@ -33,6 +33,14 @@
   .card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:1.6vh 1.2vw;position:relative;overflow:hidden;min-height:0;display:flex;flex-direction:column}
   .card .lbl{color:var(--muted);font-size:.85vw;text-transform:uppercase;letter-spacing:.12em;font-weight:700;display:flex;justify-content:space-between;align-items:center}
   .tag{font-size:.72vw;color:var(--green);font-weight:700}
+  /* two-line panel headers — matches the main "Newsroom Live" dashboard aesthetic */
+  .lhead{display:flex;justify-content:space-between;align-items:flex-start;gap:.6vw;margin-bottom:1vh}
+  .lhead .htxt{display:flex;flex-direction:column;gap:.45vh;min-width:0}
+  .lhead .ttl{font-size:1.05vw;font-weight:800;letter-spacing:-.01em;line-height:1.12;color:var(--text)}
+  .lhead .sub{font-size:.62vw;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);line-height:1.2}
+  .lhead .ttl.green{color:var(--green)} .lhead .ttl.blue{color:var(--blue)}
+  .lhead .ttl.gold{color:var(--gold)} .lhead .ttl.muted{color:var(--muted)}
+  .reserved-body{flex:1;display:flex;align-items:center;justify-content:center}
 
   .hero{grid-row:1;align-items:center;justify-content:center;text-align:center;
     background:radial-gradient(420px 320px at 50% 35%, rgba(47,208,122,.14), var(--panel) 70%);border-color:#1d4a33}
@@ -106,7 +114,7 @@
   <header>
     <div class="brand">
       <div class="logo">Business<small>Post</small></div>
-      <div class="htitle">Real-Time Newsroom</div>
+      <div class="htitle">Today Live</div>
       <span class="livebadge"><span class="d"></span>LIVE</span>
     </div>
     <div class="updated"><span id="clock" class="num">--:--:--</span> · <span id="updated">updated —</span></div>
@@ -121,26 +129,26 @@
     </section>
 
     <section class="card intraday">
-      <div class="lbl"><span>Visits Today vs Yesterday</span><span class="tag">● by hour</span></div>
+      <div class="lhead"><div class="htxt"><span class="ttl blue">Visits — Today vs Yesterday</span><span class="sub">By hour</span></div></div>
       <svg class="lc" id="lc" viewBox="0 0 1000 240" preserveAspectRatio="none"></svg>
       <div class="legend"><span><i></i>Today</span><span><i class="y"></i>Yesterday</span><span id="nowLbl" style="margin-left:auto;color:var(--blue);font-weight:700"></span></div>
     </section>
 
     <section class="card race-card">
-      <div class="lbl"><span>Top Stories Today · by Visits</span><span class="tag">● today · live</span></div>
+      <div class="lhead"><div class="htxt"><span class="ttl green">Top Stories Today</span><span class="sub">By visits · live</span></div></div>
       <div class="race" id="race"></div>
     </section>
 
     <div class="rightcol">
       <div class="mini">
-        <div class="lbl"><span>Today's Conversions</span><span class="tag">live</span></div>
+        <div class="lhead"><div class="htxt"><span class="ttl green">Today's Conversions</span><span class="sub">Subscriptions &amp; registrations</span></div></div>
         <div class="totals">
           <div class="tot"><div class="tnum num" id="subsToday">—</div><div class="tlbl">subscriptions</div></div>
           <div class="tot"><div class="tnum num" id="regsToday">—</div><div class="tlbl">registrations</div></div>
         </div>
       </div>
-      <div class="mini"><div class="lbl"><span>Subscriber Reads</span><span class="tag">24h</span></div><div class="bars" id="convSubs"></div></div>
-      <div class="mini reserved"><div class="lbl"><span>Reserved</span></div><div class="ph">panel to be decided</div></div>
+      <div class="mini"><div class="lhead"><div class="htxt"><span class="ttl gold">Subscriber Reads</span><span class="sub">Most read · last 24 hours</span></div></div><div class="bars" id="convSubs"></div></div>
+      <div class="mini"><div class="lhead"><div class="htxt"><span class="ttl muted">Reserved</span><span class="sub">Panel to be decided</span></div></div><div class="reserved-body"><span class="ph">coming soon</span></div></div>
     </div>
   </div>
 
