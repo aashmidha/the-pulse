@@ -6,14 +6,15 @@
 <title>Business Post — Today Live</title>
 <style>
   :root{
-    --bg:#070b11; --panel:#0f1620; --panel2:#141d29; --line:#222d3b;
-    --text:#fff; --muted:#8b97a5;
-    --green:#2fd07a; --red:#ff5c5c; --blue:#5ab0ff; --gold:#ffcf4a; --violet:#bc8cff; --pink:#ff7ab8; --bp:#00b365;
+    --bg:#f4f6f9; --tile:#ffffff; --panel:#ffffff; --panel2:#eef1f5; --line:#e6eaf0;
+    --text:#1b2433; --muted:#94a0b1;
+    --green:#15b257; --red:#e5484d; --blue:#2f7fed; --gold:#b07d00; --violet:#7c5cff; --pink:#d6409f; --bp:#00a05a;
+    --shadow:0 1px 3px rgba(25,35,60,.06),0 1px 2px rgba(25,35,60,.04);
   }
   *{box-sizing:border-box;margin:0;padding:0}
   html,body{height:100%}
   body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;
-    background:radial-gradient(1200px 700px at 72% -10%, #0d2a1d 0%, var(--bg) 60%);
+    background:var(--bg);
     color:var(--text);overflow:hidden;-webkit-font-smoothing:antialiased}
   .num{font-variant-numeric:tabular-nums;letter-spacing:-.02em}
   .wrap{height:100vh;display:flex;flex-direction:column;padding:1.8vh 1.8vw;gap:1.3vh}
@@ -22,7 +23,7 @@
   .brand{display:flex;align-items:center;gap:1vw}
   .logo{background:var(--bp);color:#fff;font-weight:800;line-height:.9;padding:.7vh .9vw;border-radius:6px;font-size:1.4vw}
   .logo small{display:block;font-size:.9vw}
-  .htitle{font-size:1.5vw;font-weight:800}
+  .htitle{font-size:1.5vw;font-weight:800;color:var(--green)}
   .livebadge{display:inline-flex;align-items:center;gap:.5vw;background:rgba(47,208,122,.14);color:var(--green);
     font-weight:800;font-size:1vw;padding:.5vh 1vw;border-radius:999px;letter-spacing:.1em}
   .livebadge .d{width:.8vw;height:.8vw;max-width:11px;max-height:11px;border-radius:50%;background:var(--green);animation:blink 1.3s infinite}
@@ -30,7 +31,11 @@
   .updated{color:var(--muted);font-size:1vw;font-weight:700}
 
   .grid{flex:1 1 auto;display:grid;grid-template-columns:3.2fr 4.6fr 3fr;grid-template-rows:1.05fr 1.4fr;gap:1.1vw;min-height:0}
-  .card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:1.6vh 1.2vw;position:relative;overflow:hidden;min-height:0;display:flex;flex-direction:column}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:1.6vh 1.2vw;position:relative;overflow:hidden;min-height:0;display:flex;flex-direction:column;box-shadow:var(--shadow)}
+  /* left accent stripe — like the dashboard cards */
+  .intraday::before,.race-card::before,.mini::before{content:"";position:absolute;left:0;top:0;bottom:0;width:.4vw}
+  .intraday::before{background:var(--blue)} .race-card::before{background:var(--green)}
+  .acc-green::before{background:var(--green)} .acc-gold::before{background:var(--gold)} .acc-muted::before{background:var(--line)}
   .card .lbl{color:var(--muted);font-size:.85vw;text-transform:uppercase;letter-spacing:.12em;font-weight:700;display:flex;justify-content:space-between;align-items:center}
   .tag{font-size:.72vw;color:var(--green);font-weight:700}
   /* two-line panel headers — matches the main "Newsroom Live" dashboard aesthetic */
@@ -43,8 +48,8 @@
   .reserved-body{flex:1;display:flex;align-items:center;justify-content:center}
 
   .hero{grid-row:1;align-items:center;justify-content:center;text-align:center;
-    background:radial-gradient(420px 320px at 50% 35%, rgba(47,208,122,.14), var(--panel) 70%);border-color:#1d4a33}
-  .hero .big{font-size:5vw;font-weight:800;line-height:1;color:var(--green);text-shadow:0 0 26px rgba(47,208,122,.45);margin:.4vh 0}
+    background:linear-gradient(160deg,rgba(21,178,87,.07) 0%,var(--tile) 60%);border-color:#d6ecdd}
+  .hero .big{font-size:5vw;font-weight:800;line-height:1;color:var(--green);margin:.4vh 0}
   .hero .cap{color:var(--muted);font-size:.95vw}
   .hero .cap b{color:var(--text)}
   .heart{width:100%;height:7vh;margin-top:.8vh}
@@ -77,7 +82,7 @@
   @keyframes bump{0%{transform:scale(1)}30%{transform:scale(1.22);color:var(--gold)}100%{transform:scale(1)}}
 
   .rightcol{grid-row:1 / span 2;grid-column:3;display:flex;flex-direction:column;gap:1.1vh;min-height:0}
-  .mini{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:1.3vh 1.1vw;flex:1;min-height:0;display:flex;flex-direction:column;overflow:hidden}
+  .mini{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:1.3vh 1.1vw;flex:1;min-height:0;display:flex;flex-direction:column;overflow:hidden;position:relative;box-shadow:var(--shadow)}
   .bars{display:flex;flex-direction:column;gap:.8vh;margin-top:.8vh;flex:1;justify-content:center}
   .bar{display:flex;align-items:center;gap:.7vw;font-size:.85vw}
   .bar .name{width:6vw;flex:0 0 auto;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -140,15 +145,15 @@
     </section>
 
     <div class="rightcol">
-      <div class="mini">
+      <div class="mini acc-green">
         <div class="lhead"><div class="htxt"><span class="ttl green">Today's Conversions</span><span class="sub">Subscriptions &amp; registrations</span></div></div>
         <div class="totals">
           <div class="tot"><div class="tnum num" id="subsToday">—</div><div class="tlbl">subscriptions</div></div>
           <div class="tot"><div class="tnum num" id="regsToday">—</div><div class="tlbl">registrations</div></div>
         </div>
       </div>
-      <div class="mini"><div class="lhead"><div class="htxt"><span class="ttl gold">Subscriber Reads</span><span class="sub">Most read · last 24 hours</span></div></div><div class="bars" id="convSubs"></div></div>
-      <div class="mini"><div class="lhead"><div class="htxt"><span class="ttl muted">Reserved</span><span class="sub">Panel to be decided</span></div></div><div class="reserved-body"><span class="ph">coming soon</span></div></div>
+      <div class="mini acc-gold"><div class="lhead"><div class="htxt"><span class="ttl gold">Subscriber Reads</span><span class="sub">Most read · last 24 hours</span></div></div><div class="bars" id="convSubs"></div></div>
+      <div class="mini acc-muted"><div class="lhead"><div class="htxt"><span class="ttl muted">Reserved</span><span class="sub">Panel to be decided</span></div></div><div class="reserved-body"><span class="ph">coming soon</span></div></div>
     </div>
   </div>
 
