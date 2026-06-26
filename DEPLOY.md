@@ -81,7 +81,35 @@ rm ~/.pulse_cloudflare_token ~/.pulse_github_token   # tokens are now in GitHub 
   printf '%s' 'NEW_COOKIE_VALUE' | gh secret set BART_SESSION_COOKIE --repo aashmidha/the-pulse
   ```
 - **Cost:** $0. Public repo = unlimited Actions minutes; Cloudflare Pages + KV
-  are free at this volume.
-- **Scheduler note:** GitHub cron is best-effort and can run a few minutes late
-  under load, and scheduled workflows auto-pause after 60 days with no repo
-  activity (a manual *Run workflow* or any push resets that).
+  + the trigger Worker are all free at this volume.
+
+## Reliable scheduling — the trigger Worker
+
+GitHub's own cron is "best effort" and in practice drops most `*/5` / `*/15`
+runs (it was firing only every 1–4h). So scheduling is driven by a small
+Cloudflare Worker (`trigger-worker/`, deployed as **the-pulse-trigger**) whose
+cron fires reliably every 5 min and calls GitHub's `workflow_dispatch` API:
+
+- `*/5`  → triggers `refresh-live.yml`
+- `*/15` → triggers `refresh-dashboard.yml`
+
+The GitHub `schedule:` blocks are still in the workflows as a sparse **backstop**
+(if the Worker ever stops). The Worker holds one secret, **`GH_TOKEN`** — a
+GitHub fine-grained PAT scoped to this repo with **Actions: Read+Write**.
+
+Redeploy the Worker after editing it:
+```bash
+export CLOUDFLARE_API_TOKEN=$(cat ~/.pulse_cloudflare_token)
+export CLOUDFLARE_ACCOUNT_ID=797d9b70c94383e96ee6c21f4dd89953
+npx wrangler@4 deploy --config trigger-worker/wrangler.toml
+```
+
+### ⏰ Token renewal (don't forget)
+The Worker's GitHub PAT **expires** (you chose the date when creating it). When
+it does, the auto-updates silently stop. To renew: regenerate the fine-grained
+token (same repo, Actions: Read+Write), then:
+```bash
+echo 'NEW_PAT' | npx wrangler@4 secret put GH_TOKEN --config trigger-worker/wrangler.toml
+```
+The Cloudflare API token in GitHub secrets (`CLOUDFLARE_API_TOKEN`) was rotated
+on 2026-06-26; the workers.dev subdomain is `bpie-newsroom`.
