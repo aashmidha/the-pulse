@@ -21,7 +21,8 @@
 
   header{display:flex;align-items:center;justify-content:space-between;flex:0 0 auto}
   .brand{display:flex;align-items:center;gap:1vw}
-  .logo{background:var(--bp);color:#fff;font-weight:800;line-height:.9;padding:.7vh .9vw;border-radius:6px;font-size:1.4vw}
+  .logo{background:var(--bp);border-radius:6px;padding:.9vh 1.1vw;display:inline-flex;align-items:center}
+  .logo img{height:2.6vh;width:auto;display:block}
   .logo small{display:block;font-size:.9vw}
   .htitle{font-size:1.5vw;font-weight:800;color:var(--green)}
   .livebadge{display:inline-flex;align-items:center;gap:.5vw;background:rgba(47,208,122,.14);color:var(--green);
@@ -118,7 +119,7 @@
 <div class="wrap">
   <header>
     <div class="brand">
-      <div class="logo">Business<small>Post</small></div>
+      <div class="logo"><img src="bp-logo.svg" alt="Business Post"></div>
       <span class="livebadge"><span class="d"></span>LIVE</span>
     </div>
     <div class="updated"><span id="clock" class="num">--:--:--</span> · <span id="updated">updated —</span></div>
