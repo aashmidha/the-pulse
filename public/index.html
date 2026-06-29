@@ -76,6 +76,7 @@
   .mv{display:inline-flex;align-items:center;gap:.4vw;font-size:1.5vw;font-weight:800;padding:.5vh 1.1vw;border-radius:999px}
   .mv.up{color:var(--green);background:var(--green-bg)} .mv.down{color:var(--red);background:var(--red-bg)}
   .chg .small{font-size:.85vw;font-weight:600;opacity:.85}
+  .mv .small{font-size:.8vw;font-weight:600;opacity:.8}
   .hcard .mix{margin-top:1.6vh;display:flex;gap:1.8vw;color:var(--muted);font-size:.9vw}
   .hcard .mix b{color:var(--text);font-weight:700;margin-left:.35vw}
 
@@ -119,7 +120,7 @@
   <header>
     <div class="brand">
       <div class="logo">Business<small>Post</small></div>
-      <div class="htext"><h1>The Newsroom Live</h1><p id="weekLabel">Week 23 · Jun 1 – Jun 7</p></div>
+      <div class="htext"><p id="weekLabel">Week 23 · Jun 1 – Jun 7</p></div>
     </div>
     <div class="clock">
       <div class="time num" id="clock">--:--</div>
@@ -149,19 +150,8 @@
     </div>
   </section>
 
-  <!-- Visits per day — full-width chart band -->
-  <section class="chart">
-    <div class="chart-head">
-      <span class="ttl">Visits · per day</span>
-      <span class="chart-stats" id="visMix"></span>
-      <span class="legend"><i></i>last 7d <i class="cmp"></i>previous 7d</span>
-      <span class="tag" id="visTag" style="display:none"></span>
-    </div>
-    <div class="chart-body">
-      <svg id="spark" viewBox="0 0 1000 200" preserveAspectRatio="none"></svg>
-    </div>
-    <div class="chart-x" id="chartX"></div>
-  </section>
+  <!-- Visits-per-day chart removed per newsroom request -->
+
 
   <!-- Four lists -->
   <section class="lists">
@@ -343,11 +333,10 @@ function render(d){
   const mv = d.movement || {}, tc = document.getElementById("totalChg");
   const ns = mv.newSubs7d, cx = mv.cancellations7d;
   tc.className = "moves";
-  tc.innerHTML = `<span class="mv up">▲ ${ns!=null?fmt(ns):"—"}</span>`
-               + `<span class="mv down">▼ ${cx!=null?fmt(cx):"—"}</span>`;
+  tc.innerHTML = `<span class="mv up">▲ ${ns!=null?fmt(ns):"—"} <span class="small">new · 7d</span></span>`
+               + `<span class="mv down">▼ ${cx!=null?fmt(cx):"—"} <span class="small">cancelled · 7d</span></span>`;
   document.getElementById("mix").innerHTML =
-    `<span>B2C<b>${fmt(s.piano.value)}</b></span>
-     <span>B2Cd<b>${fmt(s.b2cd.value)}</b></span>
+    `<span>B2C<b>${fmt(s.piano.value + (s.b2cd ? s.b2cd.value : 0))}</b></span>
      <span>B2B<b>${fmt(s.totalB2B.value)}</b></span>`;
 
   // Engagement (north star): % of subscribers with RFV > threshold
@@ -370,8 +359,6 @@ function render(d){
     `<span>Daily avg<b>${fmt(Math.round(ru.last7/7))}</b></span>`
     + (ru.engaged != null ? `<span>Engaged registered<b>${fmt(ru.engaged)}</b></span>` : "");
 
-  drawVisits(d.visitsDaily || [], d.visitsDailyPrev || []);
-
   fillList("convSubs", d.conversions.subscribers, "subs", d.conversions.status, "subTag");
   fillList("convRegs", d.conversions.registrations, "regs", d.conversions.status, "regTag");
   fillList("topReads7d", d.topReads7d, "reads", "live", null);
@@ -386,7 +373,6 @@ function render(d){
   }
   pill("reads7Tag", live.reads);
   pill("reads24Tag", live.reads);
-  pill("visTag", live.visits);
   // No "demo" badge when engagement is simply NA (only badge it when showing mock data).
   tagState("engLbl", "★ Subscriber Engagement", live.engagement || e.pctAbove == null);
 

@@ -119,7 +119,6 @@
   <header>
     <div class="brand">
       <div class="logo">Business<small>Post</small></div>
-      <div class="htitle">Today Live</div>
       <span class="livebadge"><span class="d"></span>LIVE</span>
     </div>
     <div class="updated"><span id="clock" class="num">--:--:--</span> · <span id="updated">updated —</span></div>
@@ -146,13 +145,12 @@
 
     <div class="rightcol">
       <div class="mini acc-green">
-        <div class="lhead"><div class="htxt"><span class="ttl green">Today's Conversions</span><span class="sub">Subscriptions &amp; registrations</span></div></div>
+        <div class="lhead"><div class="htxt"><span class="ttl green">Today's Conversions</span><span class="sub">Since midnight today</span></div></div>
         <div class="totals">
           <div class="tot"><div class="tnum num" id="subsToday">—</div><div class="tlbl">subscriptions</div></div>
           <div class="tot"><div class="tnum num" id="regsToday">—</div><div class="tlbl">registrations</div></div>
         </div>
       </div>
-      <div class="mini acc-gold"><div class="lhead"><div class="htxt"><span class="ttl gold">Subscriber Reads</span><span class="sub">Most read · last 24 hours</span></div></div><div class="bars" id="convSubs"></div></div>
       <div class="mini acc-muted"><div class="lhead"><div class="htxt"><span class="ttl muted">Reserved</span><span class="sub">Panel to be decided</span></div></div><div class="reserved-body"><span class="ph">coming soon</span></div></div>
     </div>
   </div>
@@ -274,7 +272,6 @@ function render(d){
   renderRace(d.topStories);
   tween(document.getElementById("subsToday"), d.subsToday || 0);
   tween(document.getElementById("regsToday"), d.regsToday || 0);
-  renderConvSubs(d.subReads24h);
   const u=d.updatedISO?new Date(d.updatedISO):new Date();
   document.getElementById("updated").textContent="updated "+u.toLocaleTimeString("en-IE",{hour:"2-digit",minute:"2-digit"});
 }
