@@ -60,7 +60,10 @@
   .heart polygon{fill:rgba(47,208,122,.10)}
 
   .intraday{grid-row:1}
-  .lc{flex:1;min-height:0;width:100%}
+  .lc-wrap{position:relative;flex:1;min-height:0}
+  .lc{position:absolute;left:3.6vw;right:0;top:0;bottom:0;width:auto;height:auto}
+  .yaxis{position:absolute;left:0;top:0;bottom:0;width:3.3vw;pointer-events:none}
+  .yaxis span{position:absolute;right:.35vw;transform:translateY(-50%);font-size:.62vw;color:var(--muted);font-weight:600;white-space:nowrap}
   .lc .today{fill:none;stroke:var(--blue);stroke-width:2.5;vector-effect:non-scaling-stroke;stroke-linejoin:round}
   .lc .yest{fill:none;stroke:var(--muted);stroke-width:1.6;stroke-dasharray:7 5;vector-effect:non-scaling-stroke;opacity:.7}
   .lc .fill{fill:rgba(90,176,255,.10)}
@@ -138,7 +141,7 @@
 
     <section class="card intraday">
       <div class="lhead"><div class="htxt"><span class="ttl blue">Visits — Today vs Yesterday</span><span class="sub">By hour</span></div></div>
-      <svg class="lc" id="lc" viewBox="0 0 1000 240" preserveAspectRatio="none"></svg>
+      <div class="lc-wrap"><div class="yaxis" id="yaxis"></div><svg class="lc" id="lc" viewBox="0 0 1000 240" preserveAspectRatio="none"></svg></div>
       <div class="legend"><span><i></i>Today</span><span><i class="y"></i>Yesterday</span><span id="nowLbl" style="margin-left:auto;color:var(--blue);font-weight:700"></span></div>
     </section>
 
@@ -243,6 +246,12 @@ function drawIntraday(today, yest){
   const line=svg.querySelector(".today");
   requestAnimationFrame(()=>{ line.style.transition="stroke-dashoffset 1.5s ease"; line.style.strokeDashoffset="0"; });
   document.getElementById("nowLbl").textContent=`${String(lastH).padStart(2,"0")}:00 · ${fmt(today[lastH])}/hr`;
+  // y-axis: real visit numbers, aligned to the same plot scale as the lines
+  const ticks=[1,.75,.5,.25,0];
+  document.getElementById("yaxis").innerHTML = ticks.map(fr=>{
+    const val=max*fr, yv=bot-(val-min)/rng*(bot-top), pct=(yv/H*100).toFixed(1);
+    return `<span style="top:${pct}%">${fmt(val)}</span>`;
+  }).join("");
 }
 
 const raceState={};   // per-panel state so #race (today) and #raceWeek (7d) are independent
