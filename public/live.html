@@ -42,10 +42,12 @@
   .acc-blue::before{background:var(--blue)}
   .mini .nl-totals{flex:0 0 auto;margin-top:1.4vh}
   .nl-totals .tnum{font-size:2.1vw;color:var(--blue)}
-  .nl-list{display:flex;flex-direction:column;gap:1vh;margin-top:1.8vh;flex:0 0 auto}
-  .nl-row{display:flex;align-items:center;justify-content:space-between;gap:.6vw;font-size:.98vw}
-  .nl-row .nm{color:var(--text);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .nl-row .vv{color:var(--blue);font-weight:800;flex:0 0 auto}
+  .nl-list{display:flex;flex-direction:column;gap:1.1vh;margin-top:1.6vh;flex:1;justify-content:space-evenly;min-height:0}
+  .nl-row{display:flex;align-items:center;gap:.7vw;font-size:.92vw}
+  .nl-row .nm{width:7.5vw;flex:0 0 auto;color:var(--text);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .nl-row .track{flex:1;height:1vh;background:var(--panel2);border-radius:999px;overflow:hidden}
+  .nl-row .barfill{display:block;height:100%;border-radius:999px;background:linear-gradient(90deg,#7aa8f5,var(--blue));width:0;transition:width 1s cubic-bezier(.22,1,.36,1)}
+  .nl-row .vv{width:3.2vw;text-align:right;color:var(--blue);font-weight:800;flex:0 0 auto}
   .card .lbl{color:var(--muted);font-size:.85vw;text-transform:uppercase;letter-spacing:.12em;font-weight:700;display:flex;justify-content:space-between;align-items:center}
   .tag{font-size:.72vw;color:var(--green);font-weight:700}
   /* two-line panel headers — matches the main "Newsroom Live" dashboard aesthetic */
@@ -326,8 +328,10 @@ function render(d){
   const nl = d.newsletter || {};
   tween(document.getElementById("nlToday"), nl.today || 0);
   tween(document.getElementById("nlWeek"), nl.week || 0);
+  const nlMax = Math.max(...(nl.byCampaign||[]).map(c=>c.visits), 1);
   document.getElementById("nlList").innerHTML = (nl.byCampaign||[]).slice(0,5).map(c=>
-    `<div class="nl-row"><span class="nm">${c.name}</span><span class="vv num">${fmt(c.visits)}</span></div>`).join("");
+    `<div class="nl-row"><span class="nm">${c.name}</span><span class="track"><span class="barfill" data-w="${(c.visits/nlMax*100).toFixed(1)}"></span></span><span class="vv num">${fmt(c.visits)}</span></div>`).join("");
+  requestAnimationFrame(()=>document.querySelectorAll("#nlList .barfill").forEach(f=>f.style.width=f.dataset.w+"%"));
   const u=d.updatedISO?new Date(d.updatedISO):new Date();
   document.getElementById("updated").textContent="updated "+u.toLocaleTimeString("en-IE",{hour:"2-digit",minute:"2-digit"});
 }
