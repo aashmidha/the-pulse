@@ -155,7 +155,7 @@ def main():
         "today": nl_total(nl_today_rows),
         "week": nl_total(nl_week_rows),
         "byCampaign": [{"name": r.get("src_campaign"), "visits": int(r.get("m_visits", 0) or 0)}
-                       for r in nl_week_rows if r.get("src_campaign") and r.get("src_campaign") != "N/A"][:5],
+                       for r in nl_week_rows if r.get("src_campaign") and r.get("src_campaign") != "N/A"][:10],
     }
 
     payload = {
