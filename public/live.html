@@ -39,6 +39,13 @@
   .acc-green::before{background:var(--green)} .acc-gold::before{background:var(--gold)} .acc-muted::before{background:var(--line)} .acc-violet::before{background:var(--violet)}
   #raceWeek .fill{background:linear-gradient(90deg,#6a4bd0,var(--violet))} #raceWeek .rd{color:var(--violet)}
   .mini.conv{flex:0 0 auto} .mini.conv .tnum{font-size:2vw}
+  .acc-blue::before{background:var(--blue)}
+  .mini .nl-totals{flex:0 0 auto;margin-top:1.4vh}
+  .nl-totals .tnum{font-size:2.1vw;color:var(--blue)}
+  .nl-list{display:flex;flex-direction:column;gap:1vh;margin-top:1.8vh;flex:0 0 auto}
+  .nl-row{display:flex;align-items:center;justify-content:space-between;gap:.6vw;font-size:.98vw}
+  .nl-row .nm{color:var(--text);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .nl-row .vv{color:var(--blue);font-weight:800;flex:0 0 auto}
   .card .lbl{color:var(--muted);font-size:.85vw;text-transform:uppercase;letter-spacing:.12em;font-weight:700;display:flex;justify-content:space-between;align-items:center}
   .tag{font-size:.72vw;color:var(--green);font-weight:700}
   /* two-line panel headers — matches the main "Newsroom Live" dashboard aesthetic */
@@ -164,7 +171,14 @@
           <div class="tot"><div class="tnum num" id="regsToday">—</div><div class="tlbl">registrations</div></div>
         </div>
       </div>
-      <div class="mini acc-muted"><div class="lhead"><div class="htxt"><span class="ttl muted">Reserved</span><span class="sub">Panel to be decided</span></div></div><div class="reserved-body"><span class="ph">coming soon</span></div></div>
+      <div class="mini acc-blue">
+        <div class="lhead"><div class="htxt"><span class="ttl blue">Newsletter Traffic</span><span class="sub">Visits from our emails</span></div></div>
+        <div class="totals nl-totals">
+          <div class="tot"><div class="tnum num" id="nlToday">—</div><div class="tlbl">today</div></div>
+          <div class="tot"><div class="tnum num" id="nlWeek">—</div><div class="tlbl">last 7 days</div></div>
+        </div>
+        <div class="nl-list" id="nlList"></div>
+      </div>
     </div>
   </div>
 
@@ -201,6 +215,10 @@ const SNAP = {
     {title:"Matt Cooper: Ireland needs more data centres, not fewer", visits:3540}
   ],
   subsToday:259, regsToday:34,
+  newsletter:{today:1840, week:8876, byCampaign:[
+    {name:"DailyBriefing",visits:5229},{name:"EveningBriefing",visits:2671},
+    {name:"PropertyNL",visits:411},{name:"ESGNL",visits:239}
+  ]},
   subReads24h:[
     {title:"Average Irish homeowner now a millionaire, new report shows", count:373},
     {title:"CRH confirms $8.5 billion acquisition of rival Arcosa", count:338},
@@ -305,6 +323,11 @@ function render(d){
   renderRace("raceWeek", d.topStoriesWeek || []);
   tween(document.getElementById("subsToday"), d.subsToday || 0);
   tween(document.getElementById("regsToday"), d.regsToday || 0);
+  const nl = d.newsletter || {};
+  tween(document.getElementById("nlToday"), nl.today || 0);
+  tween(document.getElementById("nlWeek"), nl.week || 0);
+  document.getElementById("nlList").innerHTML = (nl.byCampaign||[]).slice(0,5).map(c=>
+    `<div class="nl-row"><span class="nm">${c.name}</span><span class="vv num">${fmt(c.visits)}</span></div>`).join("");
   const u=d.updatedISO?new Date(d.updatedISO):new Date();
   document.getElementById("updated").textContent="updated "+u.toLocaleTimeString("en-IE",{hour:"2-digit",minute:"2-digit"});
 }

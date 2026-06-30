@@ -41,9 +41,10 @@ def creds():
 AK, SK, SITE = creds()
 HDR = {"x-api-key": f"{AK}_{SK}", "Content-Type": "application/json"}
 
-def q(columns, d1, d2, sort, maxr=20):
+def q(columns, d1, d2, sort, maxr=20, filt=None):
     body = {"space": {"s": [SITE]}, "period": {"p1": [{"type": "D", "start": d1, "end": d2}]},
             "columns": columns, "sort": [sort], "max-results": maxr, "page-num": 1}
+    if filt: body["filter"] = {"property": filt}      # e.g. {"src_source": {"$eq": "newsletter"}}
     req = urllib.request.Request(PA_URL, data=json.dumps(body).encode(), headers=HDR, method="POST")
     with urllib.request.urlopen(req, timeout=45) as r:
         return json.loads(r.read().decode()).get("DataFeed", {}).get("Rows", [])
@@ -142,11 +143,27 @@ def main():
     # Top articles by subscriber reads — 24h (live, titled, from BART)
     sub_reads = bart_subscriber_reads("atom-toparticles24h", 5)
 
+    # Newsletter traffic — visits from our own newsletters (utm_source=newsletter),
+    # today and last 7 days, split by newsletter (src_campaign). One filtered query per
+    # window returns a row per campaign (incl. "N/A"); summing gives the window total.
+    NL = {"src_source": {"$eq": "newsletter"}}
+    def nl_rows(d1, d2): return q(["src_campaign", "m_visits"], d1, d2, "-m_visits", 30, NL)
+    def nl_total(rows): return sum(int(r.get("m_visits", 0) or 0) for r in rows)
+    nl_today_rows = nl_rows(today, today)
+    nl_week_rows = nl_rows(iso(7), iso(1))
+    newsletter = {
+        "today": nl_total(nl_today_rows),
+        "week": nl_total(nl_week_rows),
+        "byCampaign": [{"name": r.get("src_campaign"), "visits": int(r.get("m_visits", 0) or 0)}
+                       for r in nl_week_rows if r.get("src_campaign") and r.get("src_campaign") != "N/A"][:5],
+    }
+
     payload = {
         "visitsToday": visits_today, "pageViewsToday": pv_today, "lastHour": last_hour,
         "hourlyToday": h_today, "hourlyYesterday": h_yest,
         "topStories": top_stories, "topStoriesWeek": top_stories_week,
         "subsToday": subs_today, "regsToday": regs_today, "subReads24h": sub_reads,
+        "newsletter": newsletter,
         "updatedISO": datetime.now(timezone.utc).isoformat(),
     }
     out = ROOT / "public" / "live.json"
