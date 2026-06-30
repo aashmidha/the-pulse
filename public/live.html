@@ -34,9 +34,11 @@
   .grid{flex:1 1 auto;display:grid;grid-template-columns:3.2fr 4.6fr 3fr;grid-template-rows:1.05fr 1.4fr;gap:1.1vw;min-height:0}
   .card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:1.6vh 1.2vw;position:relative;overflow:hidden;min-height:0;display:flex;flex-direction:column;box-shadow:var(--shadow)}
   /* left accent stripe — like the dashboard cards */
-  .intraday::before,.race-card::before,.mini::before{content:"";position:absolute;left:0;top:0;bottom:0;width:.4vw}
-  .intraday::before{background:var(--blue)} .race-card::before{background:var(--green)}
-  .acc-green::before{background:var(--green)} .acc-gold::before{background:var(--gold)} .acc-muted::before{background:var(--line)}
+  .intraday::before,.stories::before,.mini::before{content:"";position:absolute;left:0;top:0;bottom:0;width:.4vw}
+  .intraday::before{background:var(--blue)}
+  .acc-green::before{background:var(--green)} .acc-gold::before{background:var(--gold)} .acc-muted::before{background:var(--line)} .acc-violet::before{background:var(--violet)}
+  #raceWeek .fill{background:linear-gradient(90deg,#6a4bd0,var(--violet))} #raceWeek .rd{color:var(--violet)}
+  .mini.conv{flex:0 0 auto} .mini.conv .tnum{font-size:2vw}
   .card .lbl{color:var(--muted);font-size:.85vw;text-transform:uppercase;letter-spacing:.12em;font-weight:700;display:flex;justify-content:space-between;align-items:center}
   .tag{font-size:.72vw;color:var(--green);font-weight:700}
   /* two-line panel headers — matches the main "Newsroom Live" dashboard aesthetic */
@@ -45,7 +47,7 @@
   .lhead .ttl{font-size:1.05vw;font-weight:800;letter-spacing:-.01em;line-height:1.12;color:var(--text)}
   .lhead .sub{font-size:.62vw;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);line-height:1.2}
   .lhead .ttl.green{color:var(--green)} .lhead .ttl.blue{color:var(--blue)}
-  .lhead .ttl.gold{color:var(--gold)} .lhead .ttl.muted{color:var(--muted)}
+  .lhead .ttl.gold{color:var(--gold)} .lhead .ttl.muted{color:var(--muted)} .lhead .ttl.violet{color:var(--violet)}
   .reserved-body{flex:1;display:flex;align-items:center;justify-content:center}
 
   .hero{grid-row:1;align-items:center;justify-content:center;text-align:center;
@@ -69,7 +71,8 @@
   .legend i{display:inline-block;width:1.2vw;height:0;border-top:2px solid var(--blue);margin-right:.3vw;vertical-align:middle}
   .legend i.y{border-top:2px dashed var(--muted)}
 
-  .race-card{grid-row:2;grid-column:1 / span 2}
+  .stories-row{grid-row:2;grid-column:1 / span 2;display:flex;gap:1.1vw;min-height:0}
+  .card.stories{flex:1;min-height:0}
   .race{position:relative;flex:1;min-height:0;margin-top:1vh}
   .rrow{position:absolute;left:0;right:0;display:flex;align-items:center;gap:1vw;transition:transform .9s cubic-bezier(.22,1,.36,1)}
   .rrow .rk{font-size:1.4vw;font-weight:800;color:var(--muted);width:2vw;text-align:center;flex:0 0 auto}
@@ -139,13 +142,19 @@
       <div class="legend"><span><i></i>Today</span><span><i class="y"></i>Yesterday</span><span id="nowLbl" style="margin-left:auto;color:var(--blue);font-weight:700"></span></div>
     </section>
 
-    <section class="card race-card">
-      <div class="lhead"><div class="htxt"><span class="ttl green">Top Stories Today</span><span class="sub">By visits · live</span></div></div>
-      <div class="race" id="race"></div>
+    <section class="stories-row">
+      <section class="card stories acc-green">
+        <div class="lhead"><div class="htxt"><span class="ttl green">Top Stories Today</span><span class="sub">By visits · live</span></div></div>
+        <div class="race" id="race"></div>
+      </section>
+      <section class="card stories acc-violet">
+        <div class="lhead"><div class="htxt"><span class="ttl violet">Top Stories — Last 7 Days</span><span class="sub">By visits</span></div></div>
+        <div class="race" id="raceWeek"></div>
+      </section>
     </section>
 
     <div class="rightcol">
-      <div class="mini acc-green">
+      <div class="mini acc-green conv">
         <div class="lhead"><div class="htxt"><span class="ttl green">Today's Conversions</span><span class="sub">Since midnight today</span></div></div>
         <div class="totals">
           <div class="tot"><div class="tnum num" id="subsToday">—</div><div class="tlbl">subscriptions</div></div>
@@ -177,6 +186,16 @@ const SNAP = {
     {title:"Feed lands tasty deal with Dunnes Stores", visits:238},
     {title:"Amundi’s stake in Bank of Ireland nears €500m", visits:237},
     {title:"Greg Kavanagh firms’ €2m tax debt proposals don’t ‘hold water’", visits:183}
+  ],
+  topStoriesWeek:[
+    {title:"Average Irish homeowner now a millionaire, new report shows", visits:9841},
+    {title:"Race to replace Micheál Martin as Fianna Fáil leader has quietly begun", visits:7320},
+    {title:"CRH confirms $8.5 billion acquisition of rival Arcosa", visits:6125},
+    {title:"What the probate overhaul means for you", visits:5480},
+    {title:"Supreme Range Rover rules the roost", visits:4910},
+    {title:"Harris urged to cut inheritance tax in Budget 2027", visits:4233},
+    {title:"Amundi’s stake in Bank of Ireland nears €500m", visits:3877},
+    {title:"Matt Cooper: Ireland needs more data centres, not fewer", visits:3540}
   ],
   subsToday:259, regsToday:34,
   subReads24h:[
@@ -226,20 +245,22 @@ function drawIntraday(today, yest){
   document.getElementById("nowLbl").textContent=`${String(lastH).padStart(2,"0")}:00 · ${fmt(today[lastH])}/hr`;
 }
 
-let rows=[], raceTitles=[];
-function renderRace(stories){
-  const race=document.getElementById("race");
+const raceState={};   // per-panel state so #race (today) and #raceWeek (7d) are independent
+function renderRace(elId, stories){
+  const race=document.getElementById(elId); if(!race) return;
+  if(!stories.length){ race.innerHTML=""; return; }
+  const st = raceState[elId] || (raceState[elId]={rows:[],titles:[]});
   const titles=stories.map(s=>s.title);
-  if(titles.join("|")!==raceTitles.join("|")){      // (re)build rows when the set changes
-    race.innerHTML=""; rows=[]; raceTitles=titles;
+  if(titles.join("|")!==st.titles.join("|")){      // (re)build rows when the set changes
+    race.innerHTML=""; st.rows=[]; st.titles=titles;
     stories.forEach(s=>{ const el=document.createElement("div"); el.className="rrow";
       el.innerHTML=`<div class="rk num"></div><div class="body"><div class="hl">${s.title}</div>
         <div class="track"><div class="fill"></div></div></div><div class="rd num"></div>`;
-      race.appendChild(el); rows.push(el); });
+      race.appendChild(el); st.rows.push(el); });
   }
   const order=[...stories].sort((a,b)=>b.visits-a.visits), max=order[0].visits||1, h=race.clientHeight/stories.length;
   order.forEach((s,rank)=>{
-    const idx=stories.indexOf(s), el=rows[idx], prev=el._rank;
+    const idx=stories.indexOf(s), el=st.rows[idx], prev=el._rank;
     el.style.height=(h-8)+"px"; el.style.transform=`translateY(${rank*h}px)`;
     el.querySelector(".rk").textContent=rank+1;
     el.querySelector(".fill").style.width=(s.visits/max*100)+"%";
@@ -270,7 +291,8 @@ function render(d){
   document.getElementById("lastHour").textContent=fmt(d.lastHour);
   drawHeart(d.hourlyToday);
   drawIntraday(d.hourlyToday, d.hourlyYesterday);
-  renderRace(d.topStories);
+  renderRace("race", d.topStories);
+  renderRace("raceWeek", d.topStoriesWeek || []);
   tween(document.getElementById("subsToday"), d.subsToday || 0);
   tween(document.getElementById("regsToday"), d.regsToday || 0);
   const u=d.updatedISO?new Date(d.updatedISO):new Date();

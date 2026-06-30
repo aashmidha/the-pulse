@@ -121,6 +121,16 @@ def main():
         top_stories.append({"title": unescape(pg), "visits": int(r.get("m_visits", 0) or 0)})
         if len(top_stories) >= 8: break
 
+    # Top stories: by visits over the LAST 7 DAYS (ending yesterday — a range that
+    # includes today can't exceed 48h in Piano Analytics, so we end at yesterday).
+    pages_week = q(["page", "m_visits"], iso(7), iso(1), "-m_visits", 40)
+    top_stories_week = []
+    for r in pages_week:
+        pg = r.get("page")
+        if not pg or pg in EXCLUDE: continue
+        top_stories_week.append({"title": unescape(pg), "visits": int(r.get("m_visits", 0) or 0)})
+        if len(top_stories_week) >= 8: break
+
     # TODAY's conversion totals (subscriptions + registrations) — single-day, includes today
     tt = q([SUB_METRIC, REG_METRIC], today, today, f"-{SUB_METRIC}", 1)
     regs_today = int(tt[0].get(REG_METRIC, 0)) if tt else 0       # analytics registration conversions
@@ -135,7 +145,7 @@ def main():
     payload = {
         "visitsToday": visits_today, "pageViewsToday": pv_today, "lastHour": last_hour,
         "hourlyToday": h_today, "hourlyYesterday": h_yest,
-        "topStories": top_stories,
+        "topStories": top_stories, "topStoriesWeek": top_stories_week,
         "subsToday": subs_today, "regsToday": regs_today, "subReads24h": sub_reads,
         "updatedISO": datetime.now(timezone.utc).isoformat(),
     }
