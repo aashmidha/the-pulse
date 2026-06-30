@@ -320,7 +320,7 @@ function fillList(elId, items, unit, status, tagId){
     el.innerHTML = `<div class="pending">Conversion goal not yet configured in Piano Composer.</div>`;
     return;
   }
-  el.innerHTML = items.slice(0,3).map((a,i) =>
+  el.innerHTML = items.slice(0,5).map((a,i) =>
     `<div class="row"><div class="rk num">${i+1}</div><div class="hl">${a.headline}</div>
      <div class="ct num">${fmt(a.count ?? a.reads)}<small>${unit}</small></div></div>`).join("");
 }
