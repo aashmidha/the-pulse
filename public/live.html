@@ -80,7 +80,7 @@
   .rrow{position:absolute;left:0;right:0;display:flex;align-items:center;gap:1vw;transition:transform .9s cubic-bezier(.22,1,.36,1)}
   .rrow .rk{font-size:1.4vw;font-weight:800;color:var(--muted);width:2vw;text-align:center;flex:0 0 auto}
   .rrow .body{flex:1;min-width:0}
-  .rrow .hl{font-size:1.05vw;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:.5vh}
+  .rrow .hl{font-size:1.02vw;font-weight:700;line-height:1.22;margin-bottom:.6vh;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
   .rrow .track{height:1.3vh;background:var(--panel2);border-radius:999px;overflow:hidden}
   .rrow .fill{height:100%;border-radius:999px;width:0;transition:width .9s cubic-bezier(.22,1,.36,1);background:linear-gradient(90deg,#1e8a52,var(--green))}
   .rrow .rd{font-size:1.4vw;font-weight:800;color:var(--green);width:5vw;text-align:right;flex:0 0 auto}
@@ -257,6 +257,7 @@ function drawIntraday(today, yest){
 const raceState={};   // per-panel state so #race (today) and #raceWeek (7d) are independent
 function renderRace(elId, stories){
   const race=document.getElementById(elId); if(!race) return;
+  stories = (stories||[]).slice(0,5);                 // top 5 only, so headings can show in full
   if(!stories.length){ race.innerHTML=""; return; }
   const st = raceState[elId] || (raceState[elId]={rows:[],titles:[]});
   const titles=stories.map(s=>s.title);
