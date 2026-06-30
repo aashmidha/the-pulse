@@ -336,7 +336,8 @@ function render(d){
   tc.innerHTML = `<span class="mv up">▲ ${ns!=null?fmt(ns):"—"} <span class="small">new · 7d</span></span>`
                + `<span class="mv down">▼ ${cx!=null?fmt(cx):"—"} <span class="small">cancelled · 7d</span></span>`;
   document.getElementById("mix").innerHTML =
-    `<span>B2C<b>${fmt(s.piano.value + (s.b2cd ? s.b2cd.value : 0))}</b></span>
+    `<span>B2C<b>${fmt(s.piano.value)}</b></span>
+     <span>B2Cd<b>${fmt(s.b2cd.value)}</b></span>
      <span>B2B<b>${fmt(s.totalB2B.value)}</b></span>`;
 
   // Engagement (north star): % of subscribers with RFV > threshold
