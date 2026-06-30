@@ -219,7 +219,8 @@ const SNAP = {
   subsToday:259, regsToday:34,
   newsletter:{today:1840, week:8876, byCampaign:[
     {name:"DailyBriefing",visits:5229},{name:"EveningBriefing",visits:2671},
-    {name:"PropertyNL",visits:411},{name:"ESGNL",visits:239}
+    {name:"PropertyNL",visits:411},{name:"ESGNL",visits:239},{name:"MarketsNL",visits:155},
+    {name:"InternationalNL",visits:102},{name:"InvestorFinnNL",visits:98},{name:"CommRealEstateNL",visits:89}
   ]},
   subReads24h:[
     {title:"Average Irish homeowner now a millionaire, new report shows", count:373},
@@ -329,7 +330,7 @@ function render(d){
   tween(document.getElementById("nlToday"), nl.today || 0);
   tween(document.getElementById("nlWeek"), nl.week || 0);
   const nlMax = Math.max(...(nl.byCampaign||[]).map(c=>c.visits), 1);
-  document.getElementById("nlList").innerHTML = (nl.byCampaign||[]).slice(0,5).map(c=>
+  document.getElementById("nlList").innerHTML = (nl.byCampaign||[]).slice(0,8).map(c=>
     `<div class="nl-row"><span class="nm">${c.name}</span><span class="track"><span class="barfill" data-w="${(c.visits/nlMax*100).toFixed(1)}"></span></span><span class="vv num">${fmt(c.visits)}</span></div>`).join("");
   requestAnimationFrame(()=>document.querySelectorAll("#nlList .barfill").forEach(f=>f.style.width=f.dataset.w+"%"));
   const u=d.updatedISO?new Date(d.updatedISO):new Date();
