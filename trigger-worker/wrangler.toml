@@ -16,5 +16,5 @@ compatibility_date = "2025-01-01"
 workers_dev = false
 
 [triggers]
-# live every 5 min, dashboard every 15 min — the handler routes by which fired.
-crons = ["*/5 * * * *", "*/15 * * * *"]
+# live every 10 min, dashboard every 15 min — the handler routes by which fired.
+crons = ["*/10 * * * *", "*/15 * * * *"]

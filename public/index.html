@@ -391,8 +391,7 @@ function tick(){ document.getElementById("clock").textContent =
 
 tick(); setInterval(tick, 1000);
 refresh();
-setInterval(refresh, 120000);   // production: every 2 min
-setInterval(refresh, 5000);     // DEMO ONLY — delete when live
+setInterval(refresh, 300000);   // repoll every 5 min (dashboard data refreshes every 15 min)
 </script>
 </body>
 </html>

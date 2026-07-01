@@ -341,7 +341,7 @@ async function poll(){
   try{ const r=await fetch("live.json",{cache:"no-store"}); if(!r.ok) throw 0; render(await r.json()); }
   catch(e){ render(SNAP); }   // file:// or no server → real snapshot
 }
-poll(); setInterval(poll, 60000);
+poll(); setInterval(poll, 600000);   // repoll every 10 min (matches the 10-min data refresh)
 window.addEventListener("resize",()=>poll());
 function clock(){ document.getElementById("clock").textContent=new Date().toLocaleTimeString("en-IE",{hour12:false}); }
 clock(); setInterval(clock,1000);
