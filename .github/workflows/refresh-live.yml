@@ -20,6 +20,7 @@ jobs:
     env:
       CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
       CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      KV_ID: ${{ secrets.CLOUDFLARE_KV_ID }}
       WRANGLER_SEND_METRICS: "false"
     steps:
       - uses: actions/checkout@v4
@@ -38,23 +39,25 @@ jobs:
           BART_NAME=${{ secrets.BART_NAME }}
           EOF
 
-      # live.py reads newSubsToday out of metrics.json. Pull the current one
-      # from the live site so the deploy snapshot keeps it (and live shows the
-      # real headcount). If it's not there yet, live.py falls back gracefully.
-      - name: Fetch current metrics.json from the live site
+      # KV is the single source of truth for both JSON files. Pull the latest
+      # metrics.json from KV (live.py reads newSubsToday from it). Reading from KV
+      # — the store both jobs write to — avoids the stale-HTTP-cache clobber that
+      # a Pages fetch could hit. Missing/invalid → empty (live.py degrades fine).
+      - name: Pull latest metrics.json from Cloudflare KV
         run: |
           mkdir -p public
-          curl -fsSL "${{ vars.PAGES_URL }}/metrics.json" -o public/metrics.json || true
-          # Only keep it if it's valid JSON — otherwise a transient bad response
-          # (e.g. an edge-cache miss returning HTML) must NOT be re-published as
-          # metrics.json. Fall back to an empty object instead of clobbering.
+          npx -y wrangler@4 kv key get metrics.json --namespace-id "$KV_ID" > public/metrics.json 2>/dev/null || true
           if ! python3 -c "import json,sys; json.load(open('public/metrics.json'))" 2>/dev/null; then
-            echo "fetched metrics.json was not valid JSON — using empty fallback"
-            echo '{}' > public/metrics.json
+            echo "no valid metrics.json in KV yet — empty fallback"; echo '{}' > public/metrics.json
           fi
 
       - name: Refresh live screen
         run: python3 scripts/refresh_live.py
+
+      # Publish the freshly-generated live.json to KV so the dashboard job (and the
+      # next live job) always deploy the current one — no stale re-publish.
+      - name: Push live.json to Cloudflare KV
+        run: npx -y wrangler@4 kv key put live.json --path public/live.json --namespace-id "$KV_ID"
 
       - name: Publish to Cloudflare Pages
         run: |

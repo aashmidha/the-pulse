@@ -80,14 +80,19 @@ jobs:
             fi
           done
 
-      # Each Pages deploy is a full snapshot, so we must carry the live screen's
-      # live.json (which only the live job generates) or this deploy would drop it.
-      # Fetch the current one; keep only if it's valid JSON.
-      - name: Keep current live.json so this deploy doesn't drop it
+      # KV is the single source of truth for both output files. Publish the fresh
+      # metrics.json to KV so every deploy (here and the live job) uses the current one.
+      - name: Push metrics.json to Cloudflare KV
+        run: npx -y wrangler@4 kv key put metrics.json --path public/metrics.json --namespace-id "$KV_ID"
+
+      # A Pages deploy is a full snapshot, so carry the live screen's live.json too.
+      # Pull it from KV (the store the live job writes to) — not a Pages HTTP fetch,
+      # which could be edge-cached and cause the stale re-publish (clobber) we hit.
+      - name: Pull latest live.json from Cloudflare KV
         run: |
-          curl -fsSL "${{ vars.PAGES_URL }}/live.json" -o public/live.json || true
+          npx -y wrangler@4 kv key get live.json --namespace-id "$KV_ID" > public/live.json 2>/dev/null || true
           if ! python3 -c "import json,sys; json.load(open('public/live.json'))" 2>/dev/null; then
-            echo "no valid live.json to preserve yet (the live job will publish it)"; rm -f public/live.json
+            echo "no valid live.json in KV yet (the live job will publish it)"; rm -f public/live.json
           fi
 
       - name: Publish to Cloudflare Pages
