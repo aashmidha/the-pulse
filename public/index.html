@@ -333,8 +333,8 @@ function render(d){
   const mv = d.movement || {}, tc = document.getElementById("totalChg");
   const ns = mv.newSubs7d, cx = mv.cancellations7d;
   tc.className = "moves";
-  tc.innerHTML = `<span class="mv up">▲ ${ns!=null?fmt(ns):"—"} <span class="small">new · 7d</span></span>`
-               + `<span class="mv down">▼ ${cx!=null?fmt(cx):"—"} <span class="small">cancelled · 7d</span></span>`;
+  tc.innerHTML = `<span class="mv up">▲ ${ns!=null?fmt(ns):"—"} <span class="small">7d</span></span>`
+               + `<span class="mv down">▼ ${cx!=null?fmt(cx):"—"} <span class="small">7d</span></span>`;
   document.getElementById("mix").innerHTML =
     `<span>B2C<b>${fmt(s.piano.value)}</b></span>
      <span>B2Cd<b>${fmt(s.b2cd.value)}</b></span>
@@ -354,10 +354,9 @@ function render(d){
   const ru = d.registeredUsers, rd = ru.last7-ru.prev7, rUp = rd>=0, rc = document.getElementById("regChg");
   document.getElementById("regUsers").textContent = fmt(ru.last7);
   rc.className = "chg " + (rUp?"up":"down");
-  rc.innerHTML = `${rUp?"▲":"▼"} ${sign(rd)} <span class="small">vs prev 7d</span>`;
+  rc.innerHTML = `${rUp?"▲":"▼"} ${fmt(Math.abs(rd))}`;
   document.getElementById("regMix").innerHTML =
-    `<span>Daily avg<b>${fmt(Math.round(ru.last7/7))}</b></span>`
-    + (ru.engaged != null ? `<span>Engaged registered<b>${fmt(ru.engaged)}</b></span>` : "");
+    `<span>Daily avg<b>${fmt(Math.round(ru.last7/7))}</b></span>`;
 
   fillList("convSubs", d.conversions.subscribers, "subs", d.conversions.status, "subTag");
   fillList("convRegs", d.conversions.registrations, "regs", d.conversions.status, "regTag");
