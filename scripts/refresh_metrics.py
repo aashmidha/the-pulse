@@ -348,8 +348,8 @@ def fetch_engagement(b2c_uids, b2b_uids):
         prior = None
         prfv, pdate = load_prior_rfv()
         if prfv:
-            n = len(all_uids)
-            pabove = sum(1 for u in all_uids if u in prfv and prfv[u] > RFV_THRESHOLD)
+            n = len(b2c_uids)      # baseline over B2C+B2Cd only (engagement is B2C+B2Cd)
+            pabove = sum(1 for u in b2c_uids if u in prfv and prfv[u] > RFV_THRESHOLD)
             prior = {"pctAbove": round(pabove / n * 100, 1) if n else 0.0, "date": pdate}
         total_above = sum(1 for v in rfv.values() if v > RFV_THRESHOLD)   # ALL engaged users
         # registered (non-subscriber) readers engaged above the registered threshold
@@ -476,8 +476,9 @@ def main():
     cutoff = (today.date() - timedelta(days=45)).isoformat()
     save_json("history.json", {k: v for k, v in history.items() if k >= cutoff})
 
-    # Engagement (NORTH STAR): % of subscribers with RFV > threshold, + rolling 7-day delta.
-    eng_pct = eng["overall"]["pctAbove"] if eng else None
+    # Engagement (NORTH STAR): avg % of B2C+B2Cd subscribers (non-corp, status subscriber)
+    # with RFV > threshold. B2B/corporate is deliberately EXCLUDED. + rolling 7-day delta.
+    eng_pct = eng["b2c"]["pctAbove"] if eng else None
     eng_hist = load_json("eng_history.json", {})
     if eng_pct is not None: eng_hist[today_str] = eng_pct
     save_json("eng_history.json", {k: v for k, v in eng_hist.items() if k >= cutoff})
@@ -493,9 +494,8 @@ def main():
     engagement = {"pctAbove": eng_pct, "threshold": RFV_THRESHOLD,
                   "deltaWeek": eng_delta, "deltaSince": baseline_date,
                   "source": (eng.get("source") if eng else None),
-                  "above": (eng["overall"]["above"] if eng else None),
-                  "subs": (eng["overall"]["subs"] if eng else None),
-                  "b2c": (eng["b2c"] if eng else None), "b2b": (eng["b2b"] if eng else None)}
+                  "above": (eng["b2c"]["above"] if eng else None),
+                  "subs": (eng["b2c"]["subs"] if eng else None)}
     live["engagement"] = bool(eng)
     live["reads"] = bool(reads)
     # Engaged registered users = non-subscriber readers with RFV > REG_RFV_THRESHOLD.

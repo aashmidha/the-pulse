@@ -347,10 +347,9 @@ function render(d){
   const srcNote = (e.source && e.source.indexOf("file:")===0)
     ? ` <span style="color:var(--gold)">· RFV file ${e.source.slice(5)}</span>` : "";
   ec.innerHTML = (e.above != null && e.subs != null)
-    ? `${fmt(e.above)} of ${fmt(e.subs)} subscribers have RFV &gt; ${e.threshold}${srcNote}`
+    ? `${fmt(e.above)} of ${fmt(e.subs)} B2C+B2Cd subscribers have RFV &gt; ${e.threshold}${srcNote}`
     : `<span style="color:var(--gold)">NA</span>`;
-  document.getElementById("engMix").innerHTML = (e.b2c && e.b2b)
-    ? `<span>B2C+B2Cd<b>${e.b2c.pctAbove}%</b></span><span>B2B<b>${e.b2b.pctAbove}%</b></span>` : "";
+  document.getElementById("engMix").innerHTML = "";   // B2B excluded — B2C+B2Cd only
 
   const ru = d.registeredUsers, rd = ru.last7-ru.prev7, rUp = rd>=0, rc = document.getElementById("regChg");
   document.getElementById("regUsers").textContent = fmt(ru.last7);
