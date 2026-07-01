@@ -50,13 +50,17 @@ GitHub repo, pushes the code, loads all secrets, and triggers the first run.
 When it finishes it prints your live URL.
 
 > **Live deployment (this account):**
-> - Dashboard: https://the-pulse-3er.pages.dev/
-> - Real-Time: https://the-pulse-3er.pages.dev/live.html
+> - **Dashboard (Subscribers): https://tv.businesspost.group/**  ← primary URL for the wall
+> - **Live (Traffic): https://tv.businesspost.group/live.html**
 > - Repo: https://github.com/aashmidha/the-pulse  · Actions tab shows every run.
 >
-> Cloudflare gave the project the subdomain `the-pulse-3er` (the plain
-> `the-pulse` was already taken by another account). That real URL is stored in
-> the GitHub Actions variable `PAGES_URL`, which the live job reads.
+> `tv.businesspost.group` is a **custom domain** attached to the Pages project
+> (status active). The project's own subdomain `the-pulse-3er.pages.dev` also
+> still works (both point to the same project; `the-pulse` was taken by another
+> account, hence `-3er`). The GitHub Actions variable `PAGES_URL` deliberately
+> stays on `https://the-pulse-3er.pages.dev` — the workflows use it to fetch
+> metrics.json/live.json between deploys, and the .pages.dev domain is the most
+> robust choice (independent of the custom domain's DNS/cert).
 
 Optional cleanup once it succeeds:
 ```bash
