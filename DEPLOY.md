@@ -94,12 +94,22 @@ runs (it was firing only every 1–4h). So scheduling is driven by a small
 Cloudflare Worker (`trigger-worker/`, deployed as **the-pulse-trigger**) whose
 cron fires reliably every 5 min and calls GitHub's `workflow_dispatch` API:
 
-- `*/5`  → triggers `refresh-live.yml`
+- `*/10` → triggers `refresh-live.yml`
 - `*/15` → triggers `refresh-dashboard.yml`
 
 The GitHub `schedule:` blocks are still in the workflows as a sparse **backstop**
 (if the Worker ever stops). The Worker holds one secret, **`GH_TOKEN`** — a
 GitHub fine-grained PAT scoped to this repo with **Actions: Read+Write**.
+
+### Data files: KV is the single source of truth
+Each Pages deploy is a full snapshot, so every deploy must carry BOTH
+`metrics.json` and `live.json`. To avoid the two jobs re-publishing a stale HTTP
+copy of each other's file (a "clobber" that made numbers flip-flop), both files
+live in **Cloudflare KV** (keys `metrics.json`, `live.json`): the dashboard job
+writes `metrics.json` to KV and the live job writes `live.json`; each job then
+pulls the latest of BOTH from KV before deploying. KV — not a Pages fetch — is
+authoritative. (Rolling state `history.json` / `manual.json` / `eng_history.json`
+also lives in KV.) The browser then repolls: dashboard every 5 min, live 10 min.
 
 Redeploy the Worker after editing it:
 ```bash
