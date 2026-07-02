@@ -111,6 +111,12 @@ pulls the latest of BOTH from KV before deploying. KV — not a Pages fetch — 
 authoritative. (Rolling state `history.json` / `manual.json` / `eng_history.json`
 also lives in KV.) The browser then repolls: dashboard every 5 min, live 10 min.
 
+> ⚠️ **`wrangler kv` MUST use `--remote`.** In wrangler v4, `kv key get/put`
+> default to *local* state (an on-disk simulator), not real KV — so without
+> `--remote` every call is a no-op against ephemeral local storage. This bit us:
+> the live job read local-empty and re-published `metrics.json` as `{}`. All
+> `kv key` commands in both workflows now pass `--remote`.
+
 Redeploy the Worker after editing it:
 ```bash
 export CLOUDFLARE_API_TOKEN=$(cat ~/.pulse_cloudflare_token)
