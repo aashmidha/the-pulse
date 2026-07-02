@@ -157,9 +157,9 @@ def main():
     newsletter = {
         "today": nl_total(nl_today_rows),
         "week": nl_total(nl_week_rows),
-        # Breakdown is TODAY's (since midnight) — matches the "today" KPI, not the 7-day one.
+        # Breakdown is the LAST 7 DAYS (the deeper view; the "today" KPI sits above it).
         "byCampaign": [{"name": r.get("src_campaign"), "visits": int(r.get("m_visits", 0) or 0)}
-                       for r in nl_today_rows if r.get("src_campaign") and r.get("src_campaign") != "N/A"][:10],
+                       for r in nl_week_rows if r.get("src_campaign") and r.get("src_campaign") != "N/A"][:10],
     }
 
     payload = {

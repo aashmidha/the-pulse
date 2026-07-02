@@ -42,7 +42,8 @@
   .acc-blue::before{background:var(--blue)}
   .mini .nl-totals{flex:0 0 auto;margin-top:1.4vh}
   .nl-totals .tnum{font-size:2.1vw;color:var(--blue)}
-  .nl-list{display:flex;flex-direction:column;gap:1.1vh;margin-top:1.6vh;flex:1;justify-content:space-evenly;min-height:0}
+  .nl-cap{font-size:.62vw;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-top:1.4vh}
+  .nl-list{display:flex;flex-direction:column;gap:1.1vh;margin-top:.8vh;flex:1;justify-content:space-evenly;min-height:0}
   .nl-row{display:flex;align-items:center;gap:.7vw;font-size:.92vw}
   .nl-row .nm{width:7.5vw;flex:0 0 auto;color:var(--text);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .nl-row .track{flex:1;height:1vh;background:var(--panel2);border-radius:999px;overflow:hidden}
@@ -179,6 +180,7 @@
           <div class="tot"><div class="tnum num" id="nlToday">—</div><div class="tlbl">today</div></div>
           <div class="tot"><div class="tnum num" id="nlWeek">—</div><div class="tlbl">last 7 days</div></div>
         </div>
+        <div class="nl-cap">By newsletter · last 7 days</div>
         <div class="nl-list" id="nlList"></div>
       </div>
     </div>
@@ -220,9 +222,9 @@ const SNAP = {
   ],
   subsToday:259, regsToday:34,
   newsletter:{today:1840, week:8876, byCampaign:[
-    {name:"DailyBriefing",visits:980},{name:"EveningBriefing",visits:420},
-    {name:"PropertyNL",visits:150},{name:"ESGNL",visits:90},{name:"MarketsNL",visits:70},
-    {name:"InternationalNL",visits:55},{name:"InvestorFinnNL",visits:45},{name:"CommRealEstateNL",visits:30}
+    {name:"DailyBriefing",visits:5229},{name:"EveningBriefing",visits:2671},
+    {name:"PropertyNL",visits:411},{name:"ESGNL",visits:239},{name:"MarketsNL",visits:155},
+    {name:"InternationalNL",visits:102},{name:"InvestorFinnNL",visits:98},{name:"CommRealEstateNL",visits:89}
   ]},
   subReads24h:[
     {title:"Average Irish homeowner now a millionaire, new report shows", count:373},
