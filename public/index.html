@@ -120,7 +120,6 @@
   <header>
     <div class="brand">
       <div class="logo"><img src="bp-logo.svg" alt="Business Post"></div>
-      <div class="htext"><p id="weekLabel">Week 23 · Jun 1 – Jun 7</p></div>
     </div>
     <div class="clock">
       <div class="time num" id="clock">--:--</div>
@@ -326,7 +325,6 @@ function fillList(elId, items, unit, status, tagId){
 }
 
 function render(d){
-  document.getElementById("weekLabel").textContent = d.weekLabel;
 
   const s = d.subscribers;
   document.getElementById("totalPaid").textContent = fmt(s.totalPaid.value);
