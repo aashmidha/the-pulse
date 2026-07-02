@@ -46,7 +46,7 @@ jobs:
       - name: Pull latest metrics.json from Cloudflare KV
         run: |
           mkdir -p public
-          npx -y wrangler@4 kv key get metrics.json --namespace-id "$KV_ID" > public/metrics.json 2>/dev/null || true
+          npx -y wrangler@4 kv key get metrics.json --namespace-id "$KV_ID" --remote > public/metrics.json 2>/dev/null || true
           if ! python3 -c "import json,sys; json.load(open('public/metrics.json'))" 2>/dev/null; then
             echo "no valid metrics.json in KV yet — empty fallback"; echo '{}' > public/metrics.json
           fi
@@ -57,7 +57,7 @@ jobs:
       # Publish the freshly-generated live.json to KV so the dashboard job (and the
       # next live job) always deploy the current one — no stale re-publish.
       - name: Push live.json to Cloudflare KV
-        run: npx -y wrangler@4 kv key put live.json --path public/live.json --namespace-id "$KV_ID"
+        run: npx -y wrangler@4 kv key put live.json --path public/live.json --namespace-id "$KV_ID" --remote
 
       - name: Publish to Cloudflare Pages
         run: |

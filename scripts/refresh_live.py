@@ -135,10 +135,13 @@ def main():
     # TODAY's conversion totals (subscriptions + registrations) — single-day, includes today
     tt = q([SUB_METRIC, REG_METRIC], today, today, f"-{SUB_METRIC}", 1)
     regs_today = int(tt[0].get(REG_METRIC, 0)) if tt else 0       # analytics registration conversions
-    # Subscriptions = ACTUAL new subs today (VX start_date), from the dashboard scan;
-    # fall back to the analytics conversion count if metrics.json isn't available.
-    real_subs = metrics_new_subs_today()
-    subs_today = real_subs if real_subs is not None else (int(tt[0].get(SUB_METRIC, 0)) if tt else 0)
+    # Subscriptions = ACTUAL new subs today (VX start_date >= midnight), EXCLUDING
+    # upgrades — from the dashboard scan via metrics.json. We deliberately DO NOT fall
+    # back to the analytics m_vx_subscriptions count: that includes upgrade migrations
+    # (existing subs moved to new rate cards), which must be excluded.
+    subs_today = metrics_new_subs_today()
+    if subs_today is None:
+        subs_today = 0
 
     # Top articles by subscriber reads — 24h (live, titled, from BART)
     sub_reads = bart_subscriber_reads("atom-toparticles24h", 5)

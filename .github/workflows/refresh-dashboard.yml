@@ -53,7 +53,7 @@ jobs:
         run: |
           mkdir -p data
           for f in history.json manual.json eng_history.json; do
-            npx -y wrangler@4 kv key get "$f" --namespace-id "$KV_ID" > "data/$f" 2>/dev/null || true
+            npx -y wrangler@4 kv key get "$f" --namespace-id "$KV_ID" --remote > "data/$f" 2>/dev/null || true
             # Keep it ONLY if it's valid JSON. A missing key can return empty/junk,
             # which would crash the Python loader — so validate, else drop it.
             if [ -s "data/$f" ] && python3 -c "import json,sys; json.load(open('data/$f'))" 2>/dev/null; then
@@ -76,21 +76,21 @@ jobs:
         run: |
           for f in history.json manual.json eng_history.json; do
             if [ -f "data/$f" ]; then
-              npx -y wrangler@4 kv key put "$f" --path "data/$f" --namespace-id "$KV_ID"
+              npx -y wrangler@4 kv key put "$f" --path "data/$f" --namespace-id "$KV_ID" --remote
             fi
           done
 
       # KV is the single source of truth for both output files. Publish the fresh
       # metrics.json to KV so every deploy (here and the live job) uses the current one.
       - name: Push metrics.json to Cloudflare KV
-        run: npx -y wrangler@4 kv key put metrics.json --path public/metrics.json --namespace-id "$KV_ID"
+        run: npx -y wrangler@4 kv key put metrics.json --path public/metrics.json --namespace-id "$KV_ID" --remote
 
       # A Pages deploy is a full snapshot, so carry the live screen's live.json too.
       # Pull it from KV (the store the live job writes to) — not a Pages HTTP fetch,
       # which could be edge-cached and cause the stale re-publish (clobber) we hit.
       - name: Pull latest live.json from Cloudflare KV
         run: |
-          npx -y wrangler@4 kv key get live.json --namespace-id "$KV_ID" > public/live.json 2>/dev/null || true
+          npx -y wrangler@4 kv key get live.json --namespace-id "$KV_ID" --remote > public/live.json 2>/dev/null || true
           if ! python3 -c "import json,sys; json.load(open('public/live.json'))" 2>/dev/null; then
             echo "no valid live.json in KV yet (the live job will publish it)"; rm -f public/live.json
           fi
