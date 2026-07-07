@@ -101,6 +101,12 @@
   .rows{display:flex;flex-direction:column;flex:1;justify-content:space-evenly}
   .row{display:flex;align-items:flex-start;gap:.7vw;padding:.6vh 0;border-bottom:1px solid var(--line)}
   .row:last-child{border-bottom:none}
+  /* "Hit" rows (over the threshold) get a box in the card's accent colour */
+  .row.hit{border:1.6px solid var(--line);border-radius:9px;padding:.5vh .55vw;margin:.15vh -.55vw}
+  .g .row.hit{border-color:var(--green);background:var(--green-bg)}
+  .b .row.hit{border-color:var(--blue);background:var(--blue-bg)}
+  .a .row.hit{border-color:var(--gold);background:rgba(176,125,0,.10)}
+  .v .row.hit{border-color:var(--violet);background:rgba(124,92,255,.10)}
   .row .rk{font-size:1.05vw;font-weight:800;width:1.3vw;text-align:center;flex:0 0 auto;line-height:1.3}
   .row .hl{flex:1;font-size:.9vw;font-weight:600;line-height:1.3;white-space:normal}  /* full headline */
   .row .ct{font-size:1.05vw;font-weight:800;flex:0 0 auto;text-align:right;line-height:1.15}
@@ -319,9 +325,13 @@ function fillList(elId, items, unit, status, tagId){
     el.innerHTML = `<div class="pending">Conversion goal not yet configured in Piano Composer.</div>`;
     return;
   }
-  el.innerHTML = items.slice(0,5).map((a,i) =>
-    `<div class="row"><div class="rk num">${i+1}</div><div class="hl">${a.headline}</div>
-     <div class="ct num">${fmt(a.count ?? a.reads)}<small>${unit}</small></div></div>`).join("");
+  // "Hit" threshold per panel: box the row when it's over the mark (illustrates the threshold).
+  const HIT = {reads:1000, subs:5, regs:20}, thr = HIT[unit];
+  el.innerHTML = items.slice(0,5).map((a,i) => {
+    const v = a.count ?? a.reads ?? 0, hit = (thr != null && v > thr) ? " hit" : "";
+    return `<div class="row${hit}"><div class="rk num">${i+1}</div><div class="hl">${a.headline}</div>
+     <div class="ct num">${fmt(v)}<small>${unit}</small></div></div>`;
+  }).join("");
 }
 
 function render(d){
