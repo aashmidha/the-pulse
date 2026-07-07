@@ -101,12 +101,6 @@
   .rows{display:flex;flex-direction:column;flex:1;justify-content:space-evenly}
   .row{display:flex;align-items:flex-start;gap:.7vw;padding:.6vh 0;border-bottom:1px solid var(--line)}
   .row:last-child{border-bottom:none}
-  /* "Hit" rows (over the threshold) get a box in the card's accent colour */
-  .row.hit{border:1.6px solid var(--line);border-radius:9px;padding:.5vh .55vw;margin:.15vh -.55vw}
-  .g .row.hit{border-color:var(--green);background:var(--green-bg)}
-  .b .row.hit{border-color:var(--blue);background:var(--blue-bg)}
-  .a .row.hit{border-color:var(--gold);background:rgba(176,125,0,.10)}
-  .v .row.hit{border-color:var(--violet);background:rgba(124,92,255,.10)}
   .row .rk{font-size:1.05vw;font-weight:800;width:1.3vw;text-align:center;flex:0 0 auto;line-height:1.3}
   .row .hl{flex:1;font-size:.9vw;font-weight:600;line-height:1.3;white-space:normal}  /* full headline */
   .row .ct{font-size:1.05vw;font-weight:800;flex:0 0 auto;text-align:right;line-height:1.15}
@@ -115,10 +109,11 @@
   .a .rk,.a .ct{color:var(--gold)} .v .rk,.v .ct{color:var(--violet)}
   .pending{color:var(--muted);font-size:.85vw;align-self:center;text-align:center;padding:2vh 0;line-height:1.5}
   /* Highlight the #1 in each list as a filled pill (like the screenshot) */
-  .lcard .row:first-child .ct{color:#fff;padding:.3vh .7vw;border-radius:8px}
-  .lcard .row:first-child .ct small{color:rgba(255,255,255,.85)}
-  .g .row:first-child .ct{background:var(--green)} .b .row:first-child .ct{background:var(--blue)}
-  .a .row:first-child .ct{background:var(--gold)} .v .row:first-child .ct{background:var(--violet)}
+  /* Filled count-pill for the #1 row AND any row over the hit threshold */
+  .lcard .row:first-child .ct, .lcard .row.hit .ct{color:#fff;padding:.3vh .7vw;border-radius:8px}
+  .lcard .row:first-child .ct small, .lcard .row.hit .ct small{color:rgba(255,255,255,.85)}
+  .g .row:first-child .ct, .g .row.hit .ct{background:var(--green)} .b .row:first-child .ct, .b .row.hit .ct{background:var(--blue)}
+  .a .row:first-child .ct, .a .row.hit .ct{background:var(--gold)} .v .row:first-child .ct, .v .row.hit .ct{background:var(--violet)}
 </style>
 </head>
 <body>
