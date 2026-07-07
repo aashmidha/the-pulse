@@ -394,6 +394,18 @@ function tick(){ document.getElementById("clock").textContent =
 tick(); setInterval(tick, 1000);
 refresh();
 setInterval(refresh, 300000);   // repoll every 5 min (dashboard data refreshes every 15 min)
+
+// Auto-reload the wall when a NEW build is deployed, so design/layout changes
+// appear without anyone touching the browser. Reloads ONLY when the build id
+// changes (data updates don't trigger it).
+let _build = null;
+async function checkBuild(){
+  try{ const r = await fetch("version.txt", {cache:"no-store"}); if(!r.ok) return;
+    const v = (await r.text()).trim();
+    if(_build === null) _build = v; else if(v && v !== _build) location.reload();
+  }catch(e){}
+}
+checkBuild(); setInterval(checkBuild, 120000);
 </script>
 </body>
 </html>

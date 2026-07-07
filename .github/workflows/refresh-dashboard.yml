@@ -102,6 +102,11 @@ jobs:
             echo "no valid live.json in KV yet (the live job will publish it)"; rm -f public/live.json
           fi
 
+      # Build id (the commit SHA) so the screens auto-reload when new code ships.
+      # Same value across data-only re-runs, so it only changes when code changes.
+      - name: Stamp build version
+        run: echo "${GITHUB_SHA}" > public/version.txt
+
       - name: Publish to Cloudflare Pages
         run: |
           npx -y wrangler@4 pages deploy public \

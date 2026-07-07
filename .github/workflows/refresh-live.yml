@@ -59,6 +59,9 @@ jobs:
       - name: Push live.json to Cloudflare KV
         run: npx -y wrangler@4 kv key put live.json --path public/live.json --namespace-id "$KV_ID" --remote
 
+      - name: Stamp build version
+        run: echo "${GITHUB_SHA}" > public/version.txt
+
       - name: Publish to Cloudflare Pages
         run: |
           npx -y wrangler@4 pages deploy public \
