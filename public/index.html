@@ -109,11 +109,11 @@
   .a .rk,.a .ct{color:var(--gold)} .v .rk,.v .ct{color:var(--violet)}
   .pending{color:var(--muted);font-size:.85vw;align-self:center;text-align:center;padding:2vh 0;line-height:1.5}
   /* Highlight the #1 in each list as a filled pill (like the screenshot) */
-  /* Filled count-pill for the #1 row AND any row over the hit threshold */
-  .lcard .row:first-child .ct, .lcard .row.hit .ct{color:#fff;padding:.3vh .7vw;border-radius:8px}
-  .lcard .row:first-child .ct small, .lcard .row.hit .ct small{color:rgba(255,255,255,.85)}
-  .g .row:first-child .ct, .g .row.hit .ct{background:var(--green)} .b .row:first-child .ct, .b .row.hit .ct{background:var(--blue)}
-  .a .row:first-child .ct, .a .row.hit .ct{background:var(--gold)} .v .row:first-child .ct, .v .row.hit .ct{background:var(--violet)}
+  /* Filled count-pill ONLY when the count is over the hit threshold (not auto on #1) */
+  .lcard .row.hit .ct{color:#fff;padding:.3vh .7vw;border-radius:8px}
+  .lcard .row.hit .ct small{color:rgba(255,255,255,.85)}
+  .g .row.hit .ct{background:var(--green)} .b .row.hit .ct{background:var(--blue)}
+  .a .row.hit .ct{background:var(--gold)} .v .row.hit .ct{background:var(--violet)}
 </style>
 </head>
 <body>
