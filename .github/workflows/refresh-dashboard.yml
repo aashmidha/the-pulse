@@ -72,13 +72,20 @@ jobs:
           BART_KEY: ${{ secrets.BART_KEY }}
         run: python3 scripts/refresh_metrics.py
 
-      - name: Save rolling state back to Cloudflare KV
+      # Rolling state (history / manual / engagement) are DAILY figures for the 7-day
+      # trends, so there's no need to write them every 15 min. Persist ONLY on the
+      # top-of-hour run (~once/hour) to stay well under the free KV write limit.
+      - name: Save rolling state back to Cloudflare KV (hourly)
         run: |
-          for f in history.json manual.json eng_history.json; do
-            if [ -f "data/$f" ]; then
-              npx -y wrangler@4 kv key put "$f" --path "data/$f" --namespace-id "$KV_ID" --remote
-            fi
-          done
+          if [ "$(date -u +%-M)" -lt 15 ]; then
+            for f in history.json manual.json eng_history.json; do
+              if [ -f "data/$f" ]; then
+                npx -y wrangler@4 kv key put "$f" --path "data/$f" --namespace-id "$KV_ID" --remote
+              fi
+            done
+          else
+            echo "not the top-of-hour run — skipping state persist to conserve KV writes"
+          fi
 
       # KV is the single source of truth for both output files. Publish the fresh
       # metrics.json to KV so every deploy (here and the live job) uses the current one.
