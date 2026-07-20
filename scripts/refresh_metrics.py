@@ -118,8 +118,13 @@ def aggregate_subscribers():
         offset += LIMIT
         if total and offset >= total: break
         time.sleep(0.05)
+    # Genuine cancellations = users whose subscription ended in the window AND who have
+    # NO active subscription left. This strips out upgrade migrations (an existing
+    # subscriber's old term ends when they're moved to a new rate card — they didn't
+    # churn, they're still active on the new sub), matching the upgrade exclusion above.
+    real_cancellations = len(cancelled_uids - b2c_uids - b2b_uids)
     return {"active_b2c": active_b2c, "active_b2b": active_b2b, "new_subs_7d": new_subs_7d,
-            "new_subs_today": new_subs_today, "cancellations_7d": len(cancelled_uids),
+            "new_subs_today": new_subs_today, "cancellations_7d": real_cancellations,
             "b2c_uids": b2c_uids, "b2b_uids": b2b_uids}
 
 def aggregate_registrations():
