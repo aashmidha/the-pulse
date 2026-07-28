@@ -28,9 +28,10 @@ async function dispatch(workflowFile, token) {
 export default {
   // Cloudflare invokes this once per matching cron expression.
   async scheduled(event, env, ctx) {
-    const file = event.cron === "*/15 * * * *"
-      ? "refresh-dashboard.yml"   // the 15-min schedule
-      : "refresh-live.yml";       // the 5-min schedule
+    const file =
+      event.cron === "*/15 * * * *" ? "refresh-dashboard.yml" : // dashboard, 15 min
+      event.cron === "0 8 * * 6"    ? "refresh-hits.yml"      : // weekly HITs, Sat 08:00 UTC
+                                      "refresh-live.yml";        // live, 10 min
     ctx.waitUntil(dispatch(file, env.GH_TOKEN));
   },
 
@@ -42,8 +43,11 @@ export default {
       if (!env.TRIGGER_KEY || url.searchParams.get("key") !== env.TRIGGER_KEY) {
         return new Response("forbidden\n", { status: 403 });
       }
-      const wf = url.searchParams.get("wf") === "dashboard"
-        ? "refresh-dashboard.yml" : "refresh-live.yml";
+      const wfParam = url.searchParams.get("wf");
+      const wf =
+        wfParam === "dashboard" ? "refresh-dashboard.yml" :
+        wfParam === "hits"      ? "refresh-hits.yml" :
+                                  "refresh-live.yml";
       try {
         await dispatch(wf, env.GH_TOKEN);
         return new Response(`dispatched ${wf}\n`);
