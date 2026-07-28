@@ -1,0 +1,30 @@
+name: Weekly HITs report
+
+# Every Saturday: pull the BART 7-day subscriber-reads report, keep articles over
+# 1,000 total volume ("HITs"), and append them to the working Google Sheet via its
+# Apps Script web app. Reuses the BART session cookie the dashboard already uses.
+
+on:
+  schedule:
+    - cron: "0 8 * * 6"   # Saturday 08:00 UTC (~09:00 Irish time in summer)
+  workflow_dispatch: {}   # run by hand any time from the Actions tab
+
+concurrency:
+  group: weekly-hits
+
+jobs:
+  hits:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Report weekly HITs to the sheet
+        env:
+          BART_SESSION_COOKIE: ${{ secrets.BART_SESSION_COOKIE }}
+          BART_NAME: ${{ secrets.BART_NAME }}
+          HITS_WEBHOOK_URL: ${{ secrets.HITS_WEBHOOK_URL }}
+          HITS_WEBHOOK_KEY: ${{ secrets.HITS_WEBHOOK_KEY }}
+        run: python3 scripts/weekly_hits.py
