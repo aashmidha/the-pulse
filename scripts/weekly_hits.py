@@ -2,10 +2,11 @@
 """
 Weekly HITs report.
 
-Every Saturday: pull the BART 7-day subscriber-reads report, keep the articles whose
-Total volume (tot_views) is over 1,000 — the "HITs" the team currently tallies by hand —
-and append them to the working Google Sheet via its Apps Script web app (a running log,
-one row per hit, tagged with the ISO week number).
+Every Saturday: pull the BART 7-day subscriber-reads report, keep the articles read by
+more than 1,000 *unique subscribers* (diff_users — the same "reads" number the dashboard's
+"Most Read — 7 Days" panel shows) — the "HITs" the team currently tallies by hand — and
+append them to the working Google Sheet via its Apps Script web app (a running log, one row
+per hit, tagged with the ISO week number). Total volume is still logged for reference.
 
 Env:
   BART_SESSION_COOKIE, BART_NAME  — BART auth (same session cookie the dashboard uses)
@@ -61,13 +62,15 @@ def fetch_hits():
         title_m = re.search(r'</td>\s*<td[^>]*align="left"[^>]*>([^<]+)</td>', row)
         du = re.search(r'data-key="diff_users">(\d+)', row)
         tv = re.search(r'data-key="tot_views">(\d+)', row)
-        tot = int(tv.group(1)) if tv else 0
+        reads = int(du.group(1)) if du else 0   # unique subscribers who read it (the dashboard "reads")
+        tot = int(tv.group(1)) if tv else 0     # total volume (counts repeat opens) — kept for reference
         title = unescape(title_m.group(1).strip()) if title_m else ""
-        if tot > THRESHOLD and title:
+        # A HIT = read by more than THRESHOLD *unique* subscribers, matching the
+        # "Most Read — 7 Days" panel on the dashboard (not total volume).
+        if reads > THRESHOLD and title:
             hits.append({"articleId": aid, "url": url_m.group(1) if url_m else "",
-                         "title": title, "uniqueUsers": int(du.group(1)) if du else 0,
-                         "totalVolume": tot})
-    hits.sort(key=lambda h: h["totalVolume"], reverse=True)
+                         "title": title, "uniqueUsers": reads, "totalVolume": tot})
+    hits.sort(key=lambda h: h["uniqueUsers"], reverse=True)
     return hits
 
 
@@ -75,9 +78,9 @@ def main():
     now = datetime.now(timezone.utc)
     week = now.isocalendar()[1]
     hits = fetch_hits()
-    print(f"Week {week} — {len(hits)} HIT(s) over {THRESHOLD} total volume:")
+    print(f"Week {week} — {len(hits)} HIT(s) over {THRESHOLD} subscriber reads:")
     for h in hits:
-        print(f"  {h['totalVolume']:>5} vol · {h['uniqueUsers']:>4} users  {h['title'][:60]}")
+        print(f"  {h['uniqueUsers']:>5} reads · {h['totalVolume']:>5} vol  {h['title'][:60]}")
 
     url = dev_var("HITS_WEBHOOK_URL")
     if not url:
