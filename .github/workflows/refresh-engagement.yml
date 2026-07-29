@@ -1,0 +1,30 @@
+name: Daily engagement log
+
+# Once a day: read the engagement metric (the North Star) straight from the published
+# metrics.json and append one row to the "Engagement" tab of the working Google Sheet,
+# so the number the dashboard shows gets a history. Upserts by date, so a re-run just
+# refreshes today's row rather than duplicating it.
+
+on:
+  schedule:
+    - cron: "5 7 * * *"   # daily 07:05 UTC (~08:05 Irish time in summer)
+  workflow_dispatch: {}   # run by hand any time from the Actions tab
+
+concurrency:
+  group: daily-engagement
+
+jobs:
+  engagement:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Log engagement to the sheet
+        env:
+          PAGES_URL: ${{ vars.PAGES_URL }}
+          HITS_WEBHOOK_URL: ${{ secrets.HITS_WEBHOOK_URL }}
+          HITS_WEBHOOK_KEY: ${{ secrets.HITS_WEBHOOK_KEY }}
+        run: python3 scripts/daily_engagement.py

@@ -16,6 +16,6 @@ compatibility_date = "2025-01-01"
 workers_dev = false
 
 [triggers]
-# live every 10 min, dashboard every 15 min, weekly HITs Saturday 08:00 UTC —
-# the handler routes by which cron fired.
-crons = ["*/10 * * * *", "*/15 * * * *", "0 8 * * 6"]
+# live every 10 min, dashboard every 15 min, weekly HITs Saturday 08:00 UTC,
+# engagement log daily 07:05 UTC — the handler routes by which cron fired.
+crons = ["*/10 * * * *", "*/15 * * * *", "0 8 * * 6", "5 7 * * *"]

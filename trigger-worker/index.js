@@ -29,9 +29,10 @@ export default {
   // Cloudflare invokes this once per matching cron expression.
   async scheduled(event, env, ctx) {
     const file =
-      event.cron === "*/15 * * * *" ? "refresh-dashboard.yml" : // dashboard, 15 min
-      event.cron === "0 8 * * 6"    ? "refresh-hits.yml"      : // weekly HITs, Sat 08:00 UTC
-                                      "refresh-live.yml";        // live, 10 min
+      event.cron === "*/15 * * * *" ? "refresh-dashboard.yml"  : // dashboard, 15 min
+      event.cron === "0 8 * * 6"    ? "refresh-hits.yml"       : // weekly HITs, Sat 08:00 UTC
+      event.cron === "5 7 * * *"    ? "refresh-engagement.yml" : // engagement log, daily 07:05 UTC
+                                      "refresh-live.yml";         // live, 10 min
     ctx.waitUntil(dispatch(file, env.GH_TOKEN));
   },
 
@@ -45,9 +46,10 @@ export default {
       }
       const wfParam = url.searchParams.get("wf");
       const wf =
-        wfParam === "dashboard" ? "refresh-dashboard.yml" :
-        wfParam === "hits"      ? "refresh-hits.yml" :
-                                  "refresh-live.yml";
+        wfParam === "dashboard"  ? "refresh-dashboard.yml" :
+        wfParam === "hits"       ? "refresh-hits.yml" :
+        wfParam === "engagement" ? "refresh-engagement.yml" :
+                                   "refresh-live.yml";
       try {
         await dispatch(wf, env.GH_TOKEN);
         return new Response(`dispatched ${wf}\n`);
