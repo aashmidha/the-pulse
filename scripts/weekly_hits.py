@@ -86,8 +86,14 @@ def main():
     if not url:
         print("\n(HITS_WEBHOOK_URL not set — printed only, nothing written to the sheet.)")
         return
-    payload = {"key": dev_var("HITS_WEBHOOK_KEY") or "", "week": week,
-               "date": now.date().isoformat(), "hits": hits}
+    # Upsert by Week (col 0): re-running replaces this week's block instead of
+    # appending a duplicate, so redundant/retry triggers are safe.
+    date = now.date().isoformat()
+    header = ["Week", "Date", "Rank", "Article ID", "Title", "Unique users", "Total volume", "URL"]
+    rows = [[week, date, i + 1, h["articleId"], h["title"],
+             h["uniqueUsers"], h["totalVolume"], h["url"]] for i, h in enumerate(hits)]
+    payload = {"key": dev_var("HITS_WEBHOOK_KEY") or "", "tab": "HITs",
+               "header": header, "upsertCol": 0, "rows": rows}
     req = urllib.request.Request(url, data=json.dumps(payload).encode(),
                                  headers={"Content-Type": "application/json"}, method="POST")
     with urllib.request.urlopen(req, timeout=45) as r:

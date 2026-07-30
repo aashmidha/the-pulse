@@ -9,6 +9,8 @@ so there is no history of it. This job reads the exact number the dashboard is s
 "Engagement" tab on the same Google Sheet, via the shared Apps Script endpoint.
 
 Env:
+  METRICS_JSON      — optional path to a local metrics.json (e.g. the one the dashboard
+                      job just generated). If set and present, it is read instead of the URL.
   PAGES_URL         — dashboard base URL (defaults to the .pages.dev origin)
   HITS_WEBHOOK_URL  — the Google Apps Script web-app URL (shared append endpoint)
   HITS_WEBHOOK_KEY  — shared secret, must match the SECRET in the script
@@ -40,12 +42,20 @@ def dev_var(name):
     return None
 
 
-def fetch_engagement():
+def load_metrics():
+    # Prefer a local metrics.json (the dashboard job passes the one it just built),
+    # otherwise fetch the published copy.
+    local = dev_var("METRICS_JSON")
+    if local and Path(local).exists():
+        return json.loads(Path(local).read_text())
     base = (dev_var("PAGES_URL") or DEFAULT_PAGES_URL).rstrip("/")
-    url = base + "/metrics.json"
-    req = urllib.request.Request(url, headers={"User-Agent": "daily-engagement"})
+    req = urllib.request.Request(base + "/metrics.json", headers={"User-Agent": "daily-engagement"})
     with urllib.request.urlopen(req, timeout=45) as r:
-        return json.loads(r.read().decode()).get("engagement") or {}
+        return json.loads(r.read().decode())
+
+
+def fetch_engagement():
+    return load_metrics().get("engagement") or {}
 
 
 def main():

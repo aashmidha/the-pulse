@@ -72,6 +72,38 @@ jobs:
           BART_KEY: ${{ secrets.BART_KEY }}
         run: python3 scripts/refresh_metrics.py
 
+      # Log the sheet metrics off THIS reliable 15-min job rather than a standalone
+      # low-frequency cron (Cloudflare's once-a-day/weekly cron can skip a fire — it
+      # missed the engagement job's first run). Time-guarded so each fires once, and
+      # both jobs upsert (by date / by week) so any extra fire is a harmless refresh.
+      # continue-on-error: a webhook hiccup must never fail the dashboard deploy.
+      - name: Log daily engagement to the sheet (~07:00 UTC)
+        continue-on-error: true
+        env:
+          METRICS_JSON: public/metrics.json
+          HITS_WEBHOOK_URL: ${{ secrets.HITS_WEBHOOK_URL }}
+          HITS_WEBHOOK_KEY: ${{ secrets.HITS_WEBHOOK_KEY }}
+        run: |
+          H=$(date -u +%-H); M=$(date -u +%-M)
+          if [ "$H" -eq 7 ] && [ "$M" -lt 15 ]; then
+            python3 scripts/daily_engagement.py
+          else
+            echo "not the daily engagement window (now ${H}:${M} UTC) — skipping"
+          fi
+
+      - name: Weekly HITs to the sheet (Saturday ~08:00 UTC)
+        continue-on-error: true
+        env:
+          HITS_WEBHOOK_URL: ${{ secrets.HITS_WEBHOOK_URL }}
+          HITS_WEBHOOK_KEY: ${{ secrets.HITS_WEBHOOK_KEY }}
+        run: |
+          D=$(date -u +%-u); H=$(date -u +%-H); M=$(date -u +%-M)
+          if [ "$D" -eq 6 ] && [ "$H" -eq 8 ] && [ "$M" -lt 15 ]; then
+            python3 scripts/weekly_hits.py
+          else
+            echo "not the weekly HITs window (now day ${D} ${H}:${M} UTC) — skipping"
+          fi
+
       # Rolling state (history / manual / engagement) are DAILY figures for the 7-day
       # trends, so there's no need to write them every 15 min. Persist ONLY on the
       # top-of-hour run (~once/hour) to stay well under the free KV write limit.
