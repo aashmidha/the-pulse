@@ -52,7 +52,7 @@ jobs:
       - name: Restore rolling state from Cloudflare KV
         run: |
           mkdir -p data
-          for f in history.json manual.json eng_history.json; do
+          for f in history.json manual.json eng_history.json crossings_seen.json; do
             npx -y wrangler@4 kv key get "$f" --namespace-id "$KV_ID" --remote > "data/$f" 2>/dev/null || true
             # Keep it ONLY if it's valid JSON. A missing key can return empty/junk,
             # which would crash the Python loader — so validate, else drop it.
@@ -91,17 +91,20 @@ jobs:
             echo "not the daily engagement window (now ${H}:${M} UTC) — skipping"
           fi
 
-      - name: Weekly HITs to the sheet (Saturday ~08:00 UTC)
+      # Article HIT crossings: log each article the day its unique subscriber reads first
+      # cross 1,000 (replaces the old weekly HITs roster). The seen-set in KV (restored/
+      # saved above/below) makes each article log once. Runs once/day at the ~07:00 window.
+      - name: Track article HIT crossings (~07:00 UTC)
         continue-on-error: true
         env:
           HITS_WEBHOOK_URL: ${{ secrets.HITS_WEBHOOK_URL }}
           HITS_WEBHOOK_KEY: ${{ secrets.HITS_WEBHOOK_KEY }}
         run: |
-          D=$(date -u +%-u); H=$(date -u +%-H); M=$(date -u +%-M)
-          if [ "$D" -eq 6 ] && [ "$H" -eq 8 ] && [ "$M" -lt 15 ]; then
-            python3 scripts/weekly_hits.py
+          H=$(date -u +%-H); M=$(date -u +%-M)
+          if [ "$H" -eq 7 ] && [ "$M" -lt 15 ]; then
+            python3 scripts/track_crossings.py
           else
-            echo "not the weekly HITs window (now day ${D} ${H}:${M} UTC) — skipping"
+            echo "not the daily crossings window (now ${H}:${M} UTC) — skipping"
           fi
 
       # Rolling state (history / manual / engagement) are DAILY figures for the 7-day
@@ -110,7 +113,7 @@ jobs:
       - name: Save rolling state back to Cloudflare KV (hourly)
         run: |
           if [ "$(date -u +%-M)" -lt 15 ]; then
-            for f in history.json manual.json eng_history.json; do
+            for f in history.json manual.json eng_history.json crossings_seen.json; do
               if [ -f "data/$f" ]; then
                 npx -y wrangler@4 kv key put "$f" --path "data/$f" --namespace-id "$KV_ID" --remote
               fi

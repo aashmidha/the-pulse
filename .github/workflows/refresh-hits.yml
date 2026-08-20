@@ -1,13 +1,12 @@
-name: Weekly HITs report
+name: Weekly HITs report (manual only)
 
-# Every Saturday: pull the BART 7-day subscriber-reads report, keep articles over
-# 1,000 total volume ("HITs"), and append them to the working Google Sheet via its
-# Apps Script web app. Reuses the BART session cookie the dashboard already uses.
+# RETIRED as a scheduled job 2026-08-20 — superseded by the daily HIT-crossings tracker
+# (scripts/track_crossings.py, run from refresh-dashboard.yml), which logs each article
+# once when it crosses 1,000 subscriber reads. This is kept for on-demand use only:
+# run it by hand from the Actions tab to pull a one-off weekly roster into the HITs tab.
 
 on:
-  schedule:
-    - cron: "0 8 * * 6"   # Saturday 08:00 UTC (~09:00 Irish time in summer)
-  workflow_dispatch: {}   # run by hand any time from the Actions tab
+  workflow_dispatch: {}   # manual only — no schedule
 
 concurrency:
   group: weekly-hits
