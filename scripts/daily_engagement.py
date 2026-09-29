@@ -67,8 +67,9 @@ def main():
         return
     above, subs = eng.get("above"), eng.get("subs")
     thr, delta = eng.get("threshold"), eng.get("deltaWeek")
-    print(f"{today} — engagement {pct}% ({above} of {subs} subscribers over RFV {thr}, "
-          f"{delta:+} pts vs prev week)")
+    # delta can be None (no baseline yet) — never let that crash the log/write.
+    dtxt = f"{delta:+} pts vs prev week" if delta is not None else "delta n/a"
+    print(f"{today} — engagement {pct}% ({above} of {subs} subscribers over RFV {thr}, {dtxt})")
 
     url = dev_var("HITS_WEBHOOK_URL")
     if not url:
@@ -79,7 +80,7 @@ def main():
         "tab": TAB,
         "header": HEADER,
         "upsertCol": 0,   # replace any existing row for the same Date (idempotent per day)
-        "rows": [[today, pct, above, subs, thr, delta]],
+        "rows": [[today, pct, above, subs, thr, delta if delta is not None else ""]],
     }
     req = urllib.request.Request(url, data=json.dumps(payload).encode(),
                                  headers={"Content-Type": "application/json"}, method="POST")
