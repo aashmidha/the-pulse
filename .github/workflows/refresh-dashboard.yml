@@ -52,7 +52,7 @@ jobs:
       - name: Restore rolling state from Cloudflare KV
         run: |
           mkdir -p data
-          for f in history.json manual.json eng_history.json crossings_seen.json daily_done.json; do
+          for f in history.json manual.json eng_history.json crossings_seen.json daily_done.json bart_eng.json; do
             npx -y wrangler@4 kv key get "$f" --namespace-id "$KV_ID" --remote > "data/$f" 2>/dev/null || true
             # Keep it ONLY if it's valid JSON. A missing key can return empty/junk,
             # which would crash the Python loader — so validate, else drop it.
@@ -111,7 +111,7 @@ jobs:
       - name: Save rolling state back to Cloudflare KV (hourly)
         run: |
           if [ "$(date -u +%-M)" -lt 15 ]; then
-            for f in history.json manual.json eng_history.json; do
+            for f in history.json manual.json eng_history.json bart_eng.json; do
               if [ -f "data/$f" ]; then
                 npx -y wrangler@4 kv key put "$f" --path "data/$f" --namespace-id "$KV_ID" --remote
               fi

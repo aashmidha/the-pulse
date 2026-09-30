@@ -39,6 +39,7 @@ AID, TOK, BASE = creds()
 _S = json.loads(SETTINGS.read_text()) if SETTINGS.exists() else {}
 BART_BASE = (os.environ.get("BART_BASE_URL") or _S.get("bart_base") or "https://bonnieraws.dergan.net").rstrip("/")
 BART_KEY = os.environ.get("BART_KEY") or _S.get("bart_key") or ""
+BART_GROUP = os.environ.get("BART_GROUP") or _S.get("bart_group") or "BPIE_ALL"  # partner code for /ma/segments
 RFV_THRESHOLD = 19       # subscriber counts as "engaged" if RFV strictly above this
 REG_RFV_THRESHOLD = 1    # registered (non-sub) counts as "engaged" if RFV strictly above this
 NOW = int(time.time())
@@ -310,6 +311,57 @@ def load_latest_rfv():
             return rfv, dt
     return None, None
 
+def _seg_count(criteria):
+    """POST /ma/segments and return the matching-user count (with light retries)."""
+    body = json.dumps({"key": BART_KEY, "criteria": criteria}).encode()
+    url = f"{BART_BASE}/ma/segments?group={BART_GROUP}"
+    last = None
+    for attempt in range(3):
+        try:
+            req = urllib.request.Request(url, data=body,
+                                         headers={"Content-Type": "application/json"}, method="POST")
+            with urllib.request.urlopen(req, timeout=45) as r:
+                return json.loads(r.read().decode()).get("count")
+        except Exception as e:
+            last = e; time.sleep(3)
+    raise last
+
+
+def _seg_cohort(substatuses):
+    """Active subscribers in the given SubStatus values: {subs, above (RFV>threshold), pctAbove}."""
+    subs = above = 0
+    for ss in substatuses:
+        base = [{"what": "userdata", "which": "Userstatus", "op": "=", "val": "Subscriber"},
+                {"what": "userdata", "which": "SubStatus",  "op": "=", "val": ss}]
+        subs += _seg_count(base) or 0
+        above += _seg_count(base + [{"what": "rfv", "which": "RFV", "op": ">",
+                                     "val": str(RFV_THRESHOLD)}]) or 0
+    return {"subs": subs, "above": above,
+            "pctAbove": round(above / subs * 100, 1) if subs else 0.0}
+
+
+def bart_engagement():
+    """North-star engagement straight from BART's user-data table (no Piano dependency).
+    Cohort = active subscribers by SubStatus, filtered/counted server-side via /ma/segments.
+    B2C group = B2C + B2Cd (the metric's definition); B2B kept for context. Returns the same
+    shape the payload code expects, or None if BART is unavailable."""
+    if not BART_KEY:
+        return None
+    try:
+        b2c = _seg_cohort(["B2C", "B2Cd"])
+        if not b2c["subs"]:
+            print("  ! BART engagement: no B2C+B2Cd subscribers returned"); return None
+        b2b = _seg_cohort(["B2B"])
+        reg_engaged = _seg_count([{"what": "userdata", "which": "Userstatus", "op": "=", "val": "Registered"},
+                                  {"what": "rfv", "which": "RFV", "op": ">", "val": str(REG_RFV_THRESHOLD)}]) or 0
+        return {"b2c": b2c, "b2b": b2b,
+                "overall": {"subs": b2c["subs"] + b2b["subs"]},
+                "prior": None, "source": "bart-segments",
+                "regEngaged": reg_engaged, "threshold": RFV_THRESHOLD}
+    except Exception as e:
+        print("  ! BART engagement (segments) failed:", str(e)[:140]); return None
+
+
 def fetch_engagement(b2c_uids, b2b_uids):
     """North-star metric: % of current subscribers with a BART RFV score strictly
     above RFV_THRESHOLD. Pulls BART /rfv (daily-computed), joins on uid, and reports
@@ -436,7 +488,6 @@ def main():
     active_b2c, active_b2b = subs["active_b2c"], subs["active_b2b"]
     new_subs_7d, cancellations_7d = subs["new_subs_7d"], subs["cancellations_7d"]
     new_subs_today = subs["new_subs_today"]
-    eng = fetch_engagement(subs["b2c_uids"], subs["b2b_uids"])
     reads = fetch_bart_reads()
 
     # Registrations + conversions come from Piano Analytics (editorial's "registration
@@ -481,8 +532,19 @@ def main():
     cutoff = (today.date() - timedelta(days=45)).isoformat()
     save_json("history.json", {k: v for k, v in history.items() if k >= cutoff})
 
-    # Engagement (NORTH STAR): avg % of B2C+B2Cd subscribers (non-corp, status subscriber)
-    # with RFV > threshold. B2B/corporate is deliberately EXCLUDED. + rolling 7-day delta.
+    # Engagement (NORTH STAR): % of ACTIVE B2C+B2Cd subscribers with RFV > threshold.
+    # Sourced straight from BART's user-data table via /ma/segments — NO Piano dependency,
+    # and B2Cd is included. Computed once per day and cached in bart_eng.json (RFV scores
+    # and the subscriber cohort only change daily), so it's a stable daily figure with no
+    # intraday wobble and minimal BART load. On a failed recompute we keep the cached value.
+    eng = load_json("bart_eng.json", {})
+    if eng.get("date") != today_str:
+        fresh = bart_engagement()
+        if fresh:
+            fresh["date"] = today_str
+            eng = fresh
+            save_json("bart_eng.json", eng)
+    eng = eng or None
     eng_pct = eng["b2c"]["pctAbove"] if eng else None
     eng_hist = load_json("eng_history.json", {})
     if eng_pct is not None: eng_hist[today_str] = eng_pct
