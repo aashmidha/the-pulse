@@ -85,6 +85,8 @@ jobs:
           METRICS_JSON: public/metrics.json
           HITS_WEBHOOK_URL: ${{ secrets.HITS_WEBHOOK_URL }}
           HITS_WEBHOOK_KEY: ${{ secrets.HITS_WEBHOOK_KEY }}
+          BART_KEY: ${{ secrets.BART_KEY }}
+          BART_BASE_URL: ${{ secrets.BART_BASE_URL }}
         run: |
           TODAY=$(date -u +%F); H=$(date -u +%-H)
           LAST=$(python3 -c "import json;print(json.load(open('data/daily_done.json')).get('date',''))" 2>/dev/null || echo "")
@@ -96,6 +98,7 @@ jobs:
           ok=1
           python3 scripts/daily_engagement.py || ok=0
           python3 scripts/track_crossings.py || ok=0
+          python3 scripts/active_cohorts.py || ok=0
           # Always persist the crossings seen-set (it may have logged new crossings).
           npx -y wrangler@4 kv key put crossings_seen.json --path data/crossings_seen.json --namespace-id "$KV_ID" --remote || true
           if [ "$ok" = "1" ]; then
