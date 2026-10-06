@@ -66,9 +66,9 @@ cron is unreliable) that fires `workflow_dispatch`.
   upsert by date). Handles `deltaWeek == None` without crashing (see §8).
 - **`track_crossings.py`** → logs each article the day it first crosses **1,000 unique subscriber
   reads** (`diff_users`) to the **"Crossings"** tab. Dedup via KV `crossings_seen.json`. Replaced weekly HITs.
-- **`active_cohorts.py`** → logs **"B2C eng."** / **"B2B eng."** tabs (`Date · Active users · Avg pageviews`).
-  Active = `R=0 & F>0` subscribers by SubStatus via `/ma/segments`. **Avg pageviews = that day's reads per
-  active user** from BART `/user/UID/articles` (built 2026-10-06; replaced the 90-day RFV `V`). Rows are
+- **`active_cohorts.py`** → logs **"B2C eng."** / **"B2B eng."** tabs (`Date · Day · Active users · Avg pageviews`).
+  Active = `R=0 & F>0` subscribers by SubStatus via `/ma/segments`. **Avg pageviews = that day's UNIQUE articles
+  read per active user** (same-day re-opens count once, like RFV V; same-second app bursts kept as-is) from BART `/user/UID/articles` (built 2026-10-06; replaced the 90-day RFV `V`). Rows are
   dated by the **read day (yesterday, Irish time)**, not the run date. Fails (→ daily marker retries) if <90%
   of the R=0 segment read that day (snapshot not rolled over). ~40s for both cohorts (8 threads).
   `--backfill START END` prints past days (active = current subscribers with ≥1 read that day).
@@ -129,8 +129,10 @@ when all scripts succeed (so a failure retries next run).
 
 ## 9. PENDING / in-progress
 
-1. **Cohort tabs per-day avg pageviews — BUILT 2026-10-06** (see §4). Oct 5: B2C 3.63 (2,320 active),
-   B2B 5.64 (459 active). Backfill Sep 22–Oct 5 computed (printed, NOT written — the sheet's date-upsert bug
+1. **Cohort tabs per-day avg pageviews — BUILT 2026-10-06** (see §4). Oct 5 (unique articles): B2C 3.22 (2,320 active),
+   B2B 4.30 (459 active). Raw row counts (3.63/5.64) include same-day re-opens. App reads
+   (`event_param1=app`, high ids) include same-second multi-article bursts (≈12% of B2C rows, up to 46
+   articles/sec — likely prefetch/offline sync); user chose to KEEP them for now. Backfill Sep 22–Oct 5 computed (printed, NOT written — the sheet's date-upsert bug
    would duplicate rows; existing rows hold old V values dated by run date). Open: whether to exclude the
    160+/day B2B outlier accounts (they lift B2B ~4.9 → 5.6).
 2. **Engagement tab tweaks (needs user actions):** (a) add a **"Day"** (day-of-week) column as column 2 —

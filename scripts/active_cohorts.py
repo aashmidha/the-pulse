@@ -6,11 +6,12 @@ For B2C (=B2C+B2Cd) and B2B, for one DAY (default: yesterday, Irish time — the
 day, which is also the day the RFV snapshot's R=0 refers to):
   - active users  = subscribers who read that day: Userstatus=Subscriber, SubStatus in cohort,
                     R = 0 AND F > 0   (counted server-side via /ma/segments)
-  - avg pageviews = that day's article reads per active user, from each user's BART read history
-                    (/user/UID/articles) — complete, no attribution gap (unlike Piano Analytics).
-                    NOT the RFV V, which is a ~90-day total.
+  - avg pageviews = that day's UNIQUE articles read per active user (re-opening the same article
+                    the same day counts once — the same way BART's RFV V counts volume), from each
+                    user's BART read history (/user/UID/articles) — complete web + app, no attribution
+                    gap (unlike Piano Analytics). NOT the RFV V itself, which is a ~90-day total.
 
-Writes one row/day to the "B2C eng." and "B2B eng." tabs (Date · Active users · Avg pageviews),
+Writes one row/day to the "B2C eng." and "B2B eng." tabs (Date · Day · Active users · Avg pageviews),
 upsert by date. Env: BART_KEY/BART_BASE_URL(/BART_GROUP), HITS_WEBHOOK_URL, HITS_WEBHOOK_KEY.
 Run: python3 scripts/active_cohorts.py   (prints; writes only if HITS_WEBHOOK_URL is set)
 
@@ -103,7 +104,8 @@ HISTORY_LIMIT = 5000
 
 
 def reads_by_day(uid):
-    """One user's BART read history as Counter({'YYYY-MM-DD': reads}). date_local is Irish time."""
+    """One user's BART read history as Counter({'YYYY-MM-DD': unique articles read that day}).
+    date_local is Irish time."""
     url = (f"{BART_BASE}/user/{urllib.parse.quote(uid)}/articles?"
            + urllib.parse.urlencode({"key": BART_KEY, "limit": HISTORY_LIMIT}))
     last = None
@@ -111,7 +113,9 @@ def reads_by_day(uid):
         try:
             with urllib.request.urlopen(url, timeout=30) as r:
                 d = json.loads(r.read().decode())
-            return Counter(h["date_local"][:10] for h in d.get("hits", []) if h.get("date_local"))
+            seen = {(h["date_local"][:10], h.get("artid") or h.get("url"))
+                    for h in d.get("hits", []) if h.get("date_local")}
+            return Counter(day for day, _ in seen)
         except Exception as e:
             last = e; time.sleep(2)
     raise last
@@ -133,8 +137,8 @@ def cohort_uids(substatuses, criteria):
     return uids
 
 
-def post_row(tab, date, active, avg_pv):
-    post_rows(tab, [[date, active, avg_pv]])
+def sheet_row(day, active, avg_pv):
+    return [day, date.fromisoformat(day).strftime("%A"), active, avg_pv]
 
 
 def post_rows(tab, rows):
@@ -142,7 +146,7 @@ def post_rows(tab, rows):
     if not url:
         return
     payload = {"key": dev_var("HITS_WEBHOOK_KEY") or "", "tab": tab,
-               "header": ["Date", "Active users", "Average pageviews"],
+               "header": ["Date", "Day", "Active users", "Average pageviews"],
                "upsertCol": 0, "rows": rows}
     body = json.dumps(payload).encode()
     for _ in range(5):
@@ -171,7 +175,7 @@ def main():
                   f"updated yet? not writing.")
             failed = True
             continue
-        post_row(tab, day, active, avg_pv)
+        post_rows(tab, [sheet_row(day, active, avg_pv)])
     if not dev_var("HITS_WEBHOOK_URL"):
         print("\n(HITS_WEBHOOK_URL not set — printed only, nothing written to the sheet.)")
     if failed:
@@ -191,7 +195,7 @@ def backfill(start, end, write=False):
             counts = [c[day] for c in hist.values() if c[day]]
             avg_pv = round(sum(counts) / len(counts), 2) if counts else 0
             print(f"  {day}  active={len(counts):>5}  avg_pageviews={avg_pv}")
-            rows.append([day, len(counts), avg_pv])
+            rows.append(sheet_row(day, len(counts), avg_pv))
         if write:
             post_rows(tab, rows)
 
