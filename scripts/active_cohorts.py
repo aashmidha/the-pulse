@@ -11,11 +11,11 @@ day, which is also the day the RFV snapshot's R=0 refers to):
                     user's BART read history (/user/UID/articles) — complete web + app, no attribution
                     gap (unlike Piano Analytics). NOT the RFV V itself, which is a ~90-day total.
 
-  - B2B also gets avg pageviews EXCLUDING multireaders — accounts BART flags as probably shared by
-    several people (the `mr_30` multiread factor in the /rfv/csv export; ~20 B2B accounts).
+  - Both also get avg pageviews EXCLUDING multireaders — accounts BART flags as probably shared by
+    several people (the `mr_30` multiread factor in the /rfv/csv export; ~20 B2B, ~28 B2C accounts).
 
 Writes one row/day to the "B2C eng." and "B2B eng." tabs (Date · Day · Active users · Avg pageviews
-[· Avg pageviews excl. multireaders]),
+· Avg pageviews excl. multireaders),
 upsert by date. Env: BART_KEY/BART_BASE_URL(/BART_GROUP), HITS_WEBHOOK_URL, HITS_WEBHOOK_KEY.
 Run: python3 scripts/active_cohorts.py   (prints; writes only if HITS_WEBHOOK_URL is set)
 
@@ -33,7 +33,7 @@ from zoneinfo import ZoneInfo
 
 ROOT = Path(__file__).resolve().parent.parent
 COHORTS = {"B2C eng.": ["B2C", "B2Cd"], "B2B eng.": ["B2B"]}
-EXCL_MULTI = {"B2B eng."}   # tabs that also get an "excluding multireaders" column
+EXCL_MULTI = {"B2C eng.", "B2B eng."}   # tabs that also get an "excluding multireaders" column
 
 
 def dev_var(name):

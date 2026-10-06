@@ -119,7 +119,7 @@ when all scripts succeed (so a failure retries next run).
 - **Multireaders (shared accounts):** BART's `mr_30` multiread factor is NOT a user-data attribute (can't
   filter `/ma/segments` on it) and the live `/user/UID/multiread` `factor` does NOT reproduce it. It IS in the
   API's `/rfv/csv` export (same file as the manual RFV download), filled only for flagged users (~77: 20 B2B,
-  28 B2C subs, 24 Staff). B2B tab has an extra "excl. multireaders" column from this list.
+  28 B2C subs, 24 Staff). B2C + B2B tabs have an extra "excl. multireaders" column from this list.
 - **BART `/user/UID/articles` = per-user read history** (`date_local`, `artid`, `url`) → COMPLETE per-day
   reads, any date incl. past, no attribution gap. Fast (458 users in ~60s). This is the right source for
   per-day pageviews. All 458 active B2B users read on Oct 5 per BART (100% vs PA's 41%).
