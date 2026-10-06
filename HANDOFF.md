@@ -67,8 +67,11 @@ cron is unreliable) that fires `workflow_dispatch`.
 - **`track_crossings.py`** → logs each article the day it first crosses **1,000 unique subscriber
   reads** (`diff_users`) to the **"Crossings"** tab. Dedup via KV `crossings_seen.json`. Replaced weekly HITs.
 - **`active_cohorts.py`** → logs **"B2C eng."** / **"B2B eng."** tabs (`Date · Active users · Avg pageviews`).
-  Active = `R=0 & F>0` subscribers by SubStatus via `/ma/segments`. **⚠ avg pageviews is CURRENTLY the
-  RFV `V` = 90-day window total (~115). A change to per-day reads is pending — see §9.**
+  Active = `R=0 & F>0` subscribers by SubStatus via `/ma/segments`. **Avg pageviews = that day's reads per
+  active user** from BART `/user/UID/articles` (built 2026-10-06; replaced the 90-day RFV `V`). Rows are
+  dated by the **read day (yesterday, Irish time)**, not the run date. Fails (→ daily marker retries) if <90%
+  of the R=0 segment read that day (snapshot not rolled over). ~40s for both cohorts (8 threads).
+  `--backfill START END` prints past days (active = current subscribers with ≥1 read that day).
 - **`weekly_hits.py`** → RETIRED (manual-only; `refresh-hits.yml` schedule removed).
 
 ## 5. Google Sheet (the "Hits log") + Apps Script
@@ -110,6 +113,9 @@ when all scripts succeed (so a failure retries next run).
 - **Piano Analytics has a `user_id` dimension, BUT ~85% of pageviews are unattributed (`'N/A'`)** —
   consent/privacy/app. A per-user PA join badly undercounts (matched only 190/458 active B2B on Oct 5).
   **Do not use PA for per-user cohort pageviews.**
+- **BART `/user/UID/articles` returns only the newest 100 reads unless you pass `limit`** (script uses 5000).
+  Over half of active B2B users exceed 100, and a couple of B2B accounts read 160+ articles in ONE day
+  (shared logins/monitoring?) — the cap silently undercounted B2B Oct 5 as 5.0/5.17 instead of 5.64.
 - **BART `/user/UID/articles` = per-user read history** (`date_local`, `artid`, `url`) → COMPLETE per-day
   reads, any date incl. past, no attribution gap. Fast (458 users in ~60s). This is the right source for
   per-day pageviews. All 458 active B2B users read on Oct 5 per BART (100% vs PA's 41%).
@@ -123,13 +129,10 @@ when all scripts succeed (so a failure retries next run).
 
 ## 9. PENDING / in-progress
 
-1. **Cohort tabs "average pageviews" — method decided, NOT yet built.** Currently `V` (90-day window
-   total, ~115). The user wants **per-day** (e.g. Oct 5). Agreed method: use BART `/user/UID/articles`
-   per active user, count THAT DAY's reads, average over the active cohort. Proven: **B2B Oct 5 = 5.17**
-   (complete, 100% coverage) vs the V number and vs PA's undercounted 3.47. Denominator is settled
-   (active = that-day readers, so "over all active" == "over readers"). TODO: update `active_cohorts.py`
-   to per-day reads; **backfill recent days incl. Oct 5**; run B2C (~2,300 users ≈ 5 min) as its own
-   daily step, not inside the tight dashboard job. (The B2C Oct 5 number was not yet computed.)
+1. **Cohort tabs per-day avg pageviews — BUILT 2026-10-06** (see §4). Oct 5: B2C 3.63 (2,320 active),
+   B2B 5.64 (459 active). Backfill Sep 22–Oct 5 computed (printed, NOT written — the sheet's date-upsert bug
+   would duplicate rows; existing rows hold old V values dated by run date). Open: whether to exclude the
+   160+/day B2B outlier accounts (they lift B2B ~4.9 → 5.6).
 2. **Engagement tab tweaks (needs user actions):** (a) add a **"Day"** (day-of-week) column as column 2 —
    the append endpoint can't insert a column, so the user inserts one and the logger writes it; (b) fix
    **triplicate rows** — root cause is the upsert comparing the Date cell as text while Sheets stores it

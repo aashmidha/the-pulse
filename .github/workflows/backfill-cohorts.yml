@@ -1,0 +1,32 @@
+# Manual: write per-day active-user + avg-pageview rows for a date range to the
+# "B2C eng." / "B2B eng." tabs (scripts/active_cohorts.py --backfill ... --write).
+# Note the sheet's date upsert doesn't match existing date cells, so clear any rows
+# for these dates first or they'll be duplicated.
+name: Backfill cohort tabs
+
+on:
+  workflow_dispatch:
+    inputs:
+      start:
+        description: "First day (YYYY-MM-DD)"
+        required: true
+      end:
+        description: "Last day (YYYY-MM-DD), normally yesterday"
+        required: true
+
+jobs:
+  backfill:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Backfill
+        env:
+          BART_KEY: ${{ secrets.BART_KEY }}
+          BART_BASE_URL: ${{ secrets.BART_BASE_URL }}
+          HITS_WEBHOOK_URL: ${{ secrets.HITS_WEBHOOK_URL }}
+          HITS_WEBHOOK_KEY: ${{ secrets.HITS_WEBHOOK_KEY }}
+        run: python3 scripts/active_cohorts.py --backfill "${{ inputs.start }}" "${{ inputs.end }}" --write
