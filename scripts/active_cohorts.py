@@ -11,7 +11,11 @@ day, which is also the day the RFV snapshot's R=0 refers to):
                     user's BART read history (/user/UID/articles) — complete web + app, no attribution
                     gap (unlike Piano Analytics). NOT the RFV V itself, which is a ~90-day total.
 
-Writes one row/day to the "B2C eng." and "B2B eng." tabs (Date · Day · Active users · Avg pageviews),
+  - B2B also gets avg pageviews EXCLUDING multireaders — accounts BART flags as probably shared by
+    several people (the `mr_30` multiread factor in the /rfv/csv export; ~20 B2B accounts).
+
+Writes one row/day to the "B2C eng." and "B2B eng." tabs (Date · Day · Active users · Avg pageviews
+[· Avg pageviews excl. multireaders]),
 upsert by date. Env: BART_KEY/BART_BASE_URL(/BART_GROUP), HITS_WEBHOOK_URL, HITS_WEBHOOK_KEY.
 Run: python3 scripts/active_cohorts.py   (prints; writes only if HITS_WEBHOOK_URL is set)
 
@@ -29,6 +33,7 @@ from zoneinfo import ZoneInfo
 
 ROOT = Path(__file__).resolve().parent.parent
 COHORTS = {"B2C eng.": ["B2C", "B2Cd"], "B2B eng.": ["B2B"]}
+EXCL_MULTI = {"B2B eng."}   # tabs that also get an "excluding multireaders" column
 
 
 def dev_var(name):
@@ -128,6 +133,22 @@ def histories(uids):
         return dict(zip(uids, ex.map(reads_by_day, uids)))
 
 
+def multireaders():
+    """UIDs BART flags as multireaders (shared accounts): mr_30 is filled in the /rfv/csv export
+    only for flagged users. It's not a user-data attribute, so /ma/segments can't filter on it."""
+    with urllib.request.urlopen(f"{BART_BASE}/rfv/csv?" + urllib.parse.urlencode({"key": BART_KEY}),
+                                timeout=60) as r:
+        url = json.loads(r.read().decode())["url"]
+    with urllib.request.urlopen(url, timeout=120) as r:
+        text = r.read().decode("utf-8", "replace")
+    return {row["UserID"] for row in csv.DictReader(io.StringIO(text)) if (row.get("mr_30") or "").strip()}
+
+
+def avg_excluding(hist, day, exclude):
+    counts = [c[day] for u, c in hist.items() if c[day] and u not in exclude]
+    return round(sum(counts) / len(counts), 2) if counts else 0
+
+
 def cohort_uids(substatuses, criteria):
     uids = set()
     for ss in substatuses:
@@ -137,8 +158,13 @@ def cohort_uids(substatuses, criteria):
     return uids
 
 
-def sheet_row(day, active, avg_pv):
-    return [day, date.fromisoformat(day).strftime("%A"), active, avg_pv]
+def sheet_row(day, active, avg_pv, *extra):
+    return [day, date.fromisoformat(day).strftime("%A"), active, avg_pv, *extra]
+
+
+def header(tab):
+    h = ["Date", "Day", "Active users", "Average pageviews"]
+    return h + ["Average pageviews (excl. multireaders)"] if tab in EXCL_MULTI else h
 
 
 def post_rows(tab, rows):
@@ -146,7 +172,7 @@ def post_rows(tab, rows):
     if not url:
         return
     payload = {"key": dev_var("HITS_WEBHOOK_KEY") or "", "tab": tab,
-               "header": ["Date", "Day", "Active users", "Average pageviews"],
+               "header": header(tab),
                "upsertCol": 0, "rows": rows}
     body = json.dumps(payload).encode()
     for _ in range(5):
@@ -160,6 +186,7 @@ def post_rows(tab, rows):
 
 def main():
     day = (datetime.now(ZoneInfo("Europe/Dublin")).date() - timedelta(days=1)).isoformat()
+    multi = multireaders()
     failed = False
     for tab, substatuses in COHORTS.items():
         uids = cohort_uids(substatuses, _active_criteria)
@@ -175,7 +202,11 @@ def main():
                   f"updated yet? not writing.")
             failed = True
             continue
-        post_rows(tab, [sheet_row(day, active, avg_pv)])
+        extra = []
+        if tab in EXCL_MULTI:
+            extra = [avg_excluding(hist, day, multi)]
+            print(f"  excl. {len(uids & multi)} multireaders: avg_pageviews={extra[0]}")
+        post_rows(tab, [sheet_row(day, active, avg_pv, *extra)])
     if not dev_var("HITS_WEBHOOK_URL"):
         print("\n(HITS_WEBHOOK_URL not set — printed only, nothing written to the sheet.)")
     if failed:
@@ -187,6 +218,7 @@ def backfill(start, end, write=False):
     d = date.fromisoformat(start)
     while d <= date.fromisoformat(end):
         days.append(d.isoformat()); d += timedelta(days=1)
+    multi = multireaders()
     for tab, substatuses in COHORTS.items():
         hist = histories(cohort_uids(substatuses, _subscriber_criteria))
         print(f"{tab}  ({len(hist)} subscribers)")
@@ -194,8 +226,10 @@ def backfill(start, end, write=False):
         for day in days:
             counts = [c[day] for c in hist.values() if c[day]]
             avg_pv = round(sum(counts) / len(counts), 2) if counts else 0
-            print(f"  {day}  active={len(counts):>5}  avg_pageviews={avg_pv}")
-            rows.append(sheet_row(day, len(counts), avg_pv))
+            extra = [avg_excluding(hist, day, multi)] if tab in EXCL_MULTI else []
+            print(f"  {day}  active={len(counts):>5}  avg_pageviews={avg_pv}"
+                  + (f"  excl_multireaders={extra[0]}" if extra else ""))
+            rows.append(sheet_row(day, len(counts), avg_pv, *extra))
         if write:
             post_rows(tab, rows)
 
