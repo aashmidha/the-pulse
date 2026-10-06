@@ -28,6 +28,15 @@ function getOrCreate(name) {
   return ss.getSheetByName(name) || ss.insertSheet(name);
 }
 
+// Sheets turns "2026-10-06" into a Date cell, so compare upsert keys as yyyy-MM-dd text —
+// otherwise String(Date) never equals the incoming string and re-runs append duplicates.
+function upsertKey(v) {
+  if (v instanceof Date) {
+    return Utilities.formatDate(v, SpreadsheetApp.getActiveSpreadsheet().getSpreadsheetTimeZone(), "yyyy-MM-dd");
+  }
+  return String(v);
+}
+
 function doPost(e) {
   const data = JSON.parse(e.postData.contents);
   if (data.key !== SECRET) {
@@ -59,11 +68,11 @@ function doPost(e) {
 
   if (data.upsertCol != null && rows.length && sheet.getLastRow() > 1) {
     const keys = {};
-    rows.forEach(function (r) { keys[String(r[data.upsertCol])] = true; });
+    rows.forEach(function (r) { keys[upsertKey(r[data.upsertCol])] = true; });
     const nCols = sheet.getLastColumn();
     const existing = sheet.getRange(2, 1, sheet.getLastRow() - 1, nCols).getValues();
     for (let i = existing.length - 1; i >= 0; i--) {   // bottom-up so row indexes stay valid
-      if (keys[String(existing[i][data.upsertCol])]) {
+      if (keys[upsertKey(existing[i][data.upsertCol])]) {
         sheet.deleteRow(i + 2);
       }
     }

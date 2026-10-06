@@ -18,12 +18,12 @@ Run: python3 scripts/daily_engagement.py   (prints the value; only writes to the
                                              if HITS_WEBHOOK_URL is set)
 """
 import json, os, urllib.request
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 from pathlib import Path
 
 DEFAULT_PAGES_URL = "https://the-pulse-3er.pages.dev"
 TAB = "Engagement"
-HEADER = ["Date", "Engagement %", "Subscribers above (RFV>19)",
+HEADER = ["Date", "Day", "Engagement %", "Subscribers above (RFV>19)",
           "Total subscribers", "Threshold (RFV)", "Δ vs prev week (pts)"]
 
 
@@ -80,7 +80,7 @@ def main():
         "tab": TAB,
         "header": HEADER,
         "upsertCol": 0,   # replace any existing row for the same Date (idempotent per day)
-        "rows": [[today, pct, above, subs, thr, delta if delta is not None else ""]],
+        "rows": [[today, date.fromisoformat(today).strftime("%A"), pct, above, subs, thr, delta if delta is not None else ""]],
     }
     req = urllib.request.Request(url, data=json.dumps(payload).encode(),
                                  headers={"Content-Type": "application/json"}, method="POST")

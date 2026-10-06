@@ -135,7 +135,7 @@ when all scripts succeed (so a failure retries next run).
    articles/sec — likely prefetch/offline sync); user chose to KEEP them for now. Backfill Sep 22–Oct 5 computed (printed, NOT written — the sheet's date-upsert bug
    would duplicate rows; existing rows hold old V values dated by run date). Open: whether to exclude the
    160+/day B2B outlier accounts (they lift B2B ~4.9 → 5.6).
-2. **Engagement tab tweaks (needs user actions):** (a) add a **"Day"** (day-of-week) column as column 2 —
+2. **Engagement tab tweaks — code done 2026-10-06, needs user actions:** logger now writes Day as col 2 (user inserts col B); Apps Script `upsertKey()` normalises Date cells (user must paste + redeploy). (a) add a **"Day"** (day-of-week) column as column 2 —
    the append endpoint can't insert a column, so the user inserts one and the logger writes it; (b) fix
    **triplicate rows** — root cause is the upsert comparing the Date cell as text while Sheets stores it
    as a date value, so it never matches and re-appends; fix = normalize dates in the Apps Script upsert →
