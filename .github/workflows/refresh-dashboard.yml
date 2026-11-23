@@ -98,7 +98,10 @@ jobs:
           ok=1
           python3 scripts/daily_engagement.py || ok=0
           python3 scripts/track_crossings.py || ok=0
-          python3 scripts/active_cohorts.py || ok=0
+          # active_cohorts is heavy (~2,300 per-user BART calls) and must NOT block the marker —
+          # if it fails, the once-a-day guard still sets so engagement/crossings don't re-run all
+          # day (which was flooding the Engagement tab with ~96 duplicate rows/day).
+          python3 scripts/active_cohorts.py || echo "active_cohorts failed (non-blocking) — cohort tabs may lag"
           # Always persist the crossings seen-set (it may have logged new crossings).
           npx -y wrangler@4 kv key put crossings_seen.json --path data/crossings_seen.json --namespace-id "$KV_ID" --remote || true
           if [ "$ok" = "1" ]; then

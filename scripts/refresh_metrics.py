@@ -263,7 +263,15 @@ def fetch_bart_reads(limit=5):
             if len(out) >= limit: break
         return out
     try:
-        return {"d7": one(BART_OPS["d7"]), "h24": one(BART_OPS["h24"])}
+        d7 = one(BART_OPS["d7"])
+        # The 24h feed intermittently returns an empty page (blanking the wall panel), then
+        # recovers next cycle — retry a few times before giving up so a transient blip doesn't
+        # leave "Most Read — 24 Hours" empty.
+        h24 = one(BART_OPS["h24"])
+        for _ in range(3):
+            if h24: break
+            time.sleep(2); h24 = one(BART_OPS["h24"])
+        return {"d7": d7, "h24": h24}
     except Exception as e:
         print("  ! BART reads fetch failed:", str(e)[:120]); return None
 
@@ -534,11 +542,12 @@ def main():
 
     # Engagement (NORTH STAR): % of ACTIVE B2C+B2Cd subscribers with RFV > threshold.
     # Sourced straight from BART's user-data table via /ma/segments — NO Piano dependency,
-    # and B2Cd is included. Computed once per day and cached in bart_eng.json (RFV scores
-    # and the subscriber cohort only change daily), so it's a stable daily figure with no
-    # intraday wobble and minimal BART load. On a failed recompute we keep the cached value.
+    # and B2Cd is included. Computed ONCE a day and cached in bart_eng.json so it's a stable
+    # daily figure. IMPORTANT: recompute only at/after 07:00 UTC, because BART doesn't roll
+    # the RFV to the new day until mid-morning UTC — a midnight recompute cached the PREVIOUS
+    # day's data and held it all day (the stale-by-a-day bug). On failure we keep the cache.
     eng = load_json("bart_eng.json", {})
-    if eng.get("date") != today_str:
+    if eng.get("date") != today_str and today.hour >= 7:
         fresh = bart_engagement()
         if fresh:
             fresh["date"] = today_str
