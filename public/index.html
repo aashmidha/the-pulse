@@ -381,7 +381,7 @@ function render(d){
   const upd = new Date(d.updatedISO);
   document.getElementById("liveText").textContent =
     (live.subscribers ? "LIVE · updated " : "demo · ") +
-    upd.toLocaleTimeString("en-IE",{hour:"2-digit",minute:"2-digit"});
+    upd.toLocaleTimeString("en-IE",{hour:"2-digit",minute:"2-digit",timeZone:"Europe/Dublin"});
 }
 
 async function refresh(){
@@ -389,7 +389,7 @@ async function refresh(){
   catch(e){ document.getElementById("liveText").textContent = '⚠ data stale — last good values'; }
 }
 function tick(){ document.getElementById("clock").textContent =
-  new Date().toLocaleTimeString("en-IE",{hour:"2-digit",minute:"2-digit"}); }
+  new Date().toLocaleTimeString("en-IE",{hour:"2-digit",minute:"2-digit",timeZone:"Europe/Dublin"}); }
 
 tick(); setInterval(tick, 1000);
 refresh();

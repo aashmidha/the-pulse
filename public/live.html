@@ -338,7 +338,7 @@ function render(d){
     `<div class="nl-row"><span class="nm">${nlName(c.name)}</span><span class="track"><span class="barfill" data-w="${(c.visits/nlMax*100).toFixed(1)}"></span></span><span class="vv num">${fmt(c.visits)}</span></div>`).join("");
   requestAnimationFrame(()=>document.querySelectorAll("#nlList .barfill").forEach(f=>f.style.width=f.dataset.w+"%"));
   const u=d.updatedISO?new Date(d.updatedISO):new Date();
-  document.getElementById("updated").textContent="updated "+u.toLocaleTimeString("en-IE",{hour:"2-digit",minute:"2-digit"});
+  document.getElementById("updated").textContent="updated "+u.toLocaleTimeString("en-IE",{hour:"2-digit",minute:"2-digit",timeZone:"Europe/Dublin"});
 }
 
 async function poll(){
@@ -347,7 +347,7 @@ async function poll(){
 }
 poll(); setInterval(poll, 600000);   // repoll every 10 min (matches the 10-min data refresh)
 window.addEventListener("resize",()=>poll());
-function clock(){ document.getElementById("clock").textContent=new Date().toLocaleTimeString("en-IE",{hour12:false}); }
+function clock(){ document.getElementById("clock").textContent=new Date().toLocaleTimeString("en-IE",{hour12:false,timeZone:"Europe/Dublin"}); }
 clock(); setInterval(clock,1000);
 
 // Auto-reload the wall when a NEW build is deployed (only when the build id changes).
