@@ -546,11 +546,12 @@ def main():
     # daily figure. IMPORTANT: recompute only at/after 07:00 UTC, because BART doesn't roll
     # the RFV to the new day until mid-morning UTC — a midnight recompute cached the PREVIOUS
     # day's data and held it all day (the stale-by-a-day bug). On failure we keep the cache.
+    ENG_CACHE_VER = "v2-20261123"  # bump this to force a one-time recompute (ignores cached date)
     eng = load_json("bart_eng.json", {})
-    if eng.get("date") != today_str and today.hour >= 7:
+    if (eng.get("date") != today_str or eng.get("ver") != ENG_CACHE_VER) and today.hour >= 7:
         fresh = bart_engagement()
         if fresh:
-            fresh["date"] = today_str
+            fresh["date"] = today_str; fresh["ver"] = ENG_CACHE_VER
             eng = fresh
             save_json("bart_eng.json", eng)
     eng = eng or None
