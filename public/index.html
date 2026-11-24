@@ -243,6 +243,7 @@ async function fetchMetrics(){
     d.subscribers.piano.value += j; d.subscribers.totalB2C.value += j; d.subscribers.totalPaid.value += j;
     d.updatedISO = new Date().toISOString();
     d._live = {subscribers:false, registrations:false, conversions:false, visits:false, reads:false, engagement:false};
+    d._demo = true;   // whole dashboard is demo (opened with no server) — keep the DEMO badge
     return d;
   }
 }
@@ -259,7 +260,10 @@ function mergeReal(real){
   if(live.registrations && real.registeredUsers?.last7 != null) d.registeredUsers = real.registeredUsers;
   if(live.conversions && real.conversions) d.conversions = real.conversions;
   if(live.visits && real.visitsDaily?.length){ d.visitsDaily = real.visitsDaily; d.visitsDailyPrev = real.visitsDailyPrev || []; }
-  if(live.reads){ d.topReads7d = real.topReads7d || []; d.topReads24h = real.topReads24h || []; }
+  // Reads: always take the server's list (fresh OR last-good cache) — NEVER the demo list.
+  // readsAsOf is set by the server only when BART is down and it's serving stale cache.
+  d.topReads7d = real.topReads7d || []; d.topReads24h = real.topReads24h || [];
+  d.readsAsOf = real.readsAsOf || null;
   d.updatedISO = real.updatedISO || new Date().toISOString();
   d._live = live;
   return d;
@@ -276,6 +280,17 @@ function tagState(id, base, isLive){ const el=document.getElementById(id); if(el
 function pill(id, isLive){ const el=document.getElementById(id); if(!el) return;
   if(isLive){ el.style.display="none"; return; }
   el.style.display=""; el.style.color=""; el.classList.add("demo"); el.textContent="● DEMO"; }
+// Reads panels: hidden when BART is live; a red "BART DOWN · as of HH:MM" when we're
+// showing last-good cached articles; "BART UNAVAILABLE" when there's nothing cached to show.
+// In pure offline preview (no server) it falls back to the normal "● DEMO".
+function readsPill(id, isLive, asOf, demo){ const el=document.getElementById(id); if(!el) return;
+  if(isLive){ el.style.display="none"; return; }
+  el.style.display=""; el.classList.remove("demo");
+  if(demo){ el.style.color=""; el.classList.add("demo"); el.textContent="● DEMO"; return; }
+  el.style.color="var(--red)";
+  el.textContent = asOf
+    ? "⚠ BART DOWN · as of " + new Date(asOf).toLocaleTimeString("en-IE",{hour:"2-digit",minute:"2-digit",timeZone:"Europe/Dublin"})
+    : "⚠ BART UNAVAILABLE"; }
 
 function drawVisits(daily, prev){
   const vals = daily.map(d => d.visits);
@@ -373,8 +388,8 @@ function render(d){
     pill("subTag", live.conversions);
     pill("regTag", live.conversions);
   }
-  pill("reads7Tag", live.reads);
-  pill("reads24Tag", live.reads);
+  readsPill("reads7Tag", live.reads, d.readsAsOf, !!d._demo);
+  readsPill("reads24Tag", live.reads, d.readsAsOf, !!d._demo);
   // No "demo" badge when engagement is simply NA (only badge it when showing mock data).
   tagState("engLbl", "★ Subscriber Engagement", live.engagement || e.pctAbove == null);
 

@@ -530,6 +530,21 @@ def main():
     today = datetime.now(timezone.utc)
     today_str = today.date().isoformat()
     target_str = (today.date() - timedelta(days=7)).isoformat()
+
+    # Last-good reads cache. When BART is up we refresh the cache; when it's DOWN we serve the
+    # cached articles (clearly flagged stale via readsAsOf, live.reads stays False) instead of
+    # blanking the Most Read panels OR falling back to the baked-in demo list on the wall.
+    reads_fresh = bool(reads and (reads.get("d7") or reads.get("h24")))
+    reads_cache = load_json("reads_cache.json", {})
+    reads_as_of = None
+    if reads_fresh:
+        reads_cache = {"d7": reads["d7"], "h24": reads["h24"], "asOf": today.isoformat()}
+        save_json("reads_cache.json", reads_cache)
+    elif reads_cache.get("d7") or reads_cache.get("h24"):
+        reads = {"d7": reads_cache.get("d7", []), "h24": reads_cache.get("h24", [])}
+        reads_as_of = reads_cache.get("asOf")      # BART down → last-good, stamped stale
+    else:
+        reads = None                                # no cache yet → panels blank + flagged
     history = load_json("history.json", {})
     history[today_str] = total_paid
     past = None
@@ -574,7 +589,7 @@ def main():
                   "above": (eng["b2c"]["above"] if eng else None),
                   "subs": (eng["b2c"]["subs"] if eng else None)}
     live["engagement"] = bool(eng)
-    live["reads"] = bool(reads)
+    live["reads"] = reads_fresh   # True only on a genuinely fresh BART fetch (not stale cache)
     # Engaged registered users = non-subscriber readers with RFV > REG_RFV_THRESHOLD.
     reg_engaged = eng["regEngaged"] if eng else None
 
@@ -597,6 +612,7 @@ def main():
         "visitsDailyPrev": visits_prev,
         "topReads7d": (reads["d7"] if reads else []),
         "topReads24h": (reads["h24"] if reads else []),
+        "readsAsOf": reads_as_of,     # set only when serving STALE cached reads (BART down)
         "updatedISO": today.isoformat(),
     }
     out = ROOT / "public" / "metrics.json"
@@ -607,8 +623,10 @@ def main():
     print(f"  Registrations (analytics): last7 {reg_last7:,}  prev7 {reg_prev7:,}  (Δ {reg_last7-reg_prev7:+,})")
     if eng: print(f"  ENGAGEMENT: {eng_pct}% of {eng['overall']['subs']:,} subs RFV>{RFV_THRESHOLD} | B2C {eng['b2c']['pctAbove']}% · B2B {eng['b2b']['pctAbove']}% | engaged registered RFV>{REG_RFV_THRESHOLD} (non-sub): {reg_engaged:,}")
     else:   print("  ENGAGEMENT: BART RFV unavailable")
-    if reads and reads["d7"]: print(f"  BART READS: 7d top {reads['d7'][0]['headline'][:45]!r} ({reads['d7'][0]['reads']}) · {len(reads['d7'])}×7d {len(reads['h24'])}×24h")
-    else:   print("  BART READS: unavailable (check BART_SESSION_COOKIE)")
+    if reads and reads["d7"]:
+        stale = "" if reads_fresh else f"  ⚠ STALE (BART down) — serving cache as of {reads_as_of}"
+        print(f"  BART READS: 7d top {reads['d7'][0]['headline'][:45]!r} ({reads['d7'][0]['reads']}) · {len(reads['d7'])}×7d {len(reads['h24'])}×24h{stale}")
+    else:   print("  BART READS: unavailable, no cache yet (check BART_SESSION_COOKIE) — panels blank + flagged")
     if conv:
         print(f"  Conversions LIVE — top sub article: {conv['subscribers'][0]['headline'][:45] if conv['subscribers'] else 'n/a'!r}")
         print(f"                     top reg article: {conv['registrations'][0]['headline'][:45] if conv['registrations'] else 'n/a'!r}")

@@ -52,7 +52,7 @@ jobs:
       - name: Restore rolling state from Cloudflare KV
         run: |
           mkdir -p data
-          for f in history.json manual.json eng_history.json crossings_seen.json daily_done.json bart_eng.json; do
+          for f in history.json manual.json eng_history.json crossings_seen.json daily_done.json bart_eng.json reads_cache.json; do
             npx -y wrangler@4 kv key get "$f" --namespace-id "$KV_ID" --remote > "data/$f" 2>/dev/null || true
             # Keep it ONLY if it's valid JSON. A missing key can return empty/junk,
             # which would crash the Python loader — so validate, else drop it.
@@ -130,6 +130,16 @@ jobs:
       # metrics.json to KV so every deploy (here and the live job) uses the current one.
       - name: Push metrics.json to Cloudflare KV
         run: npx -y wrangler@4 kv key put metrics.json --path public/metrics.json --namespace-id "$KV_ID" --remote
+
+      # Persist the last-good "Most Read" cache EVERY run (not just hourly) so the stale-fallback
+      # "as of" time stays accurate to ~15 min when BART later goes down. The script only changes
+      # the file's contents on a fresh BART fetch; re-putting the unchanged copy otherwise is cheap
+      # and harmless (well under the KV write cap).
+      - name: Push reads_cache.json to Cloudflare KV
+        run: |
+          if [ -f data/reads_cache.json ]; then
+            npx -y wrangler@4 kv key put reads_cache.json --path data/reads_cache.json --namespace-id "$KV_ID" --remote
+          fi
 
       # A Pages deploy is a full snapshot, so carry the live screen's live.json too.
       # Pull it from KV (the store the live job writes to) — not a Pages HTTP fetch,
